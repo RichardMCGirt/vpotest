@@ -71,6 +71,8 @@ button:hover {
     overflow-y: auto; /* Enable vertical scrolling if content exceeds the max height */
     overflow-x: auto; /* Enable horizontal scrolling if table is too wide */
     margin-top: 20px; /* Optional: Add some margin to space the table from the other content */
+    border: #24346c;
+    
 }
 
 
