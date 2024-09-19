@@ -8,20 +8,19 @@
 </head>
 <body>
     <h2 id="searchBarTitle" class="hidden">Open VPOs Awaiting Field Tech</h2>
-    <div class="search-container">
+    <div>
         <input type="text" id="searchBar" class="hidden" placeholder="Search...">
         <button id="searchButton" class="hidden">Search</button>
     </div>
-    <div id="loadingMessage">Open VPOs are being loaded...</div>
+    <div id="loadingMessage"></div>
+    
+    <!-- Table is wrapped in a scrollable div -->
     <div class="table-container">
         <table id="records">
             <!-- Table rows will be inserted here by JavaScript -->
         </table>
     </div>
-    <div class="button-container">
-        <button id="submitUpdates" class="sticky-button">Submit</button>
-        <button id="undoButton" class="sticky-button">Undo</button>
-    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="FieldTechVPO.js"></script>
 </body>
