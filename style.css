@@ -1,0 +1,239 @@
+/* General styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #d0d2d6;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+    color: #333;
+}
+
+h2 {
+    margin-top: 30px;
+    color: #24346c;
+    font-size: 24px;
+}
+
+.search-container {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    width: 70%;
+    justify-content: center;
+    position: sticky;
+}
+
+/* 3D Effect for input fields */
+input[type="text"] {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 200px;
+    transition: all 0.3s ease-in-out;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), 2px 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+input[type="text"]:focus {
+    border-color: #24346c;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), 0 0 8px rgba(36, 52, 108, 0.5);
+    width: 100%;
+}
+
+/* 3D Effect for buttons */
+button {
+    padding: 10px 20px;
+    background: linear-gradient(145deg, #2a4d9e, #24346c);
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2), -2px -2px 4px rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease-in-out;
+}
+
+button:hover {
+    background-color: #1d2f5c;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3), -1px -1px 4px rgba(255, 255, 255, 0.6);
+    transform: translateY(-3px);
+}
+
+/* Table styling */
+.table-container {
+    width: 100%; /* Full width */
+    max-height: 400px; /* Set a maximum height for the container */
+    overflow-y: auto; /* Enable vertical scrolling if content exceeds the max height */
+    overflow-x: auto; /* Enable horizontal scrolling if table is too wide */
+    margin-top: 20px; /* Optional: Add some margin to space the table from the other content */
+}
+
+
+table {
+    width: 100%; /* Ensure the table takes up the full width of the container */
+    border-collapse: collapse;
+    border: 2px solid #24346c; /* Outer border around the entire table */
+
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd; /* Inner borders between cells */
+    text-align: center;
+    white-space: nowrap; /* Prevent text from wrapping inside the cells */
+    overflow: hidden; /* Hide overflowed content */
+    text-overflow: ellipsis; /* Add ellipsis if text overflows */
+    max-width: 200px; /* Set a maximum width for each cell */
+}
+
+/* Style for the custom checkbox */
+.custom-checkbox {
+    position: relative;
+    display: inline-block;
+    width: 30px; /* Increase size */
+    height: 30px; /* Increase size */
+}
+
+.custom-checkbox input[type="checkbox"] {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.custom-checkbox .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30px; /* Match custom checkbox size */
+    height: 30px; /* Match custom checkbox size */
+    background-color: #ccc;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.custom-checkbox input[type="checkbox"]:checked + .checkmark {
+    background-color: #d6c7c7;
+    transform: scale(1.1); /* Slightly enlarge on check */
+}
+
+.custom-checkbox .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 10px;
+    top: 6px;
+    width: 6px;
+    height: 12px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+    transition: all 0.2s ease-in-out;
+}
+
+.custom-checkbox input[type="checkbox"]:checked + .checkmark:after {
+    display: block;
+    transform: scale(1.2) rotate(45deg);
+    opacity: 1;
+}
+
+/* CSS for truncating the text with ellipses */
+td.description-cell, th.description-cell {
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+th {
+    background-color: #24346c;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    font-size: 22px;
+    padding: 5px;
+    font-weight: bold;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.2);
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+/* Mobile specific styling */
+@media only screen and (max-width: 768px) {
+    .table-container {
+        overflow-x: scroll; /* Enable horizontal scrolling */
+    }
+
+    table {
+        font-size: 12px; /* Decrease font size for mobile */
+        width: 100%; /* Let the table take full width of the screen */
+    }
+
+    td, th {
+        padding: 8px;
+    }
+
+    td.description-cell {
+        max-width: none;
+        white-space: normal; /* Allow text wrapping on mobile */
+    }
+
+    /* Adjust the button styling for mobile */
+    button {
+        padding: 8px 18px;
+        font-size: 12px;
+        box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.5);
+    }
+
+    input[type="text"] {
+        padding: 8px;
+        width: 150px; /* Adjust search bar for mobile */
+        box-shadow: inset 1px 1px 5px rgba(0, 0, 0, 0.1), 2px 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    th {
+        font-size: 18px;
+        box-shadow: 0 3px 3px rgba(0, 0, 0, 0.15);
+    }
+}
+
+/* Optimize for landscape mode */
+@media only screen and (max-width: 1024px) and (orientation: landscape) {
+    body {
+        justify-content: flex-start;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    .search-container {
+        width: 90%; /* Increase width in landscape for better spacing */
+    }
+
+    table {
+        width: 95%; /* Allow table to take full width of the screen */
+        min-width: 500px; /* Slightly reduce minimum width in landscape */
+    }
+
+    td, th {
+        padding: 6px; /* Reduce padding to fit more content on the screen */
+        font-size: 12px; /* Smaller font size for better content fit */
+    }
+
+    .sticky-button {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}

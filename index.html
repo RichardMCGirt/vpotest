@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPO Awaiting Field Tech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h2 id="searchBarTitle" class="hidden">Open VPOs Awaiting Field Tech</h2>
+    <div>
+        <input type="text" id="searchBar" class="hidden" placeholder="Search...">
+        <button id="searchButton" class="hidden">Search</button>
+    </div>
+    <div id="loadingMessage"></div>
+    
+    <!-- Table is wrapped in a scrollable div -->
+    <div class="table-container">
+        <table id="records">
+            <!-- Table rows will be inserted here by JavaScript -->
+        </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="FieldTechVPO.js"></script>
+</body>
+</html>
