@@ -67,7 +67,7 @@ button:hover {
 /* Table styling */
 .table-container {
     width: 90%; /* Full width */
-    max-height: 1400px; /* Set a maximum height for the container */
+    max-height: 1000px; /* Set a maximum height for the container */
     overflow-y: auto; /* Enable vertical scrolling if content exceeds the max height */
     overflow-x: auto; /* Enable horizontal scrolling if table is too wide */
     margin-top: 20px; /* Optional: Add some margin to space the table from the other content */
