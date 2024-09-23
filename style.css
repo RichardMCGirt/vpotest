@@ -2,8 +2,7 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #d0d2d6;
-    margin: 0;
-    padding: 0;
+      
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -67,12 +66,11 @@ button:hover {
 /* Table styling */
 .table-container {
     width: 90%; /* Full width */
-    max-height: 1000px; /* Set a maximum height for the container */
+    max-height: 1100px; /* Set a maximum height for the container */
     overflow-y: auto; /* Enable vertical scrolling if content exceeds the max height */
     overflow-x: auto; /* Enable horizontal scrolling if table is too wide */
-    margin-top: 20px; /* Optional: Add some margin to space the table from the other content */
+    margin-top: 15px; /* Optional: Add some margin to space the table from the other content */
     border: #24346c;
-    
 }
 
 
@@ -80,7 +78,7 @@ table {
     width: 100%; /* Ensure the table takes up the full width of the container */
     border-collapse: collapse;
     border: 2px solid #24346c; /* Outer border around the entire table */
-
+    
 }
 
 th, td {
@@ -161,6 +159,7 @@ th {
     padding: 5px;
     font-weight: bold;
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.2);
+    height: auto;
 }
 
 tr:nth-child(even) {
@@ -227,6 +226,7 @@ tr:nth-child(odd) {
     table {
         width: 95%; /* Allow table to take full width of the screen */
         min-width: 500px; /* Slightly reduce minimum width in landscape */
+        height: auto;
     }
 
     td, th {
