@@ -113,12 +113,13 @@ document.addEventListener("DOMContentLoaded", async function () {
         const tableHeader = `
             <thead>
                 <tr>
-                    <th>Branch</th>
+                <th style="width: 8%;">ID Number</th>
+                <th>Branch</th>
                     <th>Job Name</th>
                     <th>Description of Work</th>
                     <th>Field Technician</th>
-                    <th>Confirmed Complete</th>
-                </tr>
+                    <th style="width: 13%;">Confirmed Complete</th>
+                    </tr>
             </thead>
             <tbody>
             </tbody>
@@ -153,6 +154,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     function createRecordRow(record) {
         const recordRow = document.createElement('tr');
+        const IDNumber = record.fields['ID Number'] || '';
+
         const vanirOffice = record.fields['static Vanir Office'] || '';
         const jobName = record.fields['Job Name'] || '';
         const fieldTechnician = record.fields['static Field Technician'] || '';
@@ -161,6 +164,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         const descriptionOfWork = record.descriptionOfWork || '';
 
         recordRow.innerHTML = `
+        <td>${IDNumber}</td>
+
             <td>${vanirOffice}</td>
             <td>${jobName}</td>
             <td>${descriptionOfWork}</td>
