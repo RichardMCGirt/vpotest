@@ -14,7 +14,7 @@ body {
 
 .table-container {
     width: 90%; /* Full width */
-    max-height: 80vh; /* Set max height relative to viewport */
+    max-height: 40vh; /* Set max height relative to viewport */
     overflow-y: auto; /* Enable vertical scrolling */
     overflow-x: auto; /* Enable horizontal scrolling */
     margin-top: 15px;
