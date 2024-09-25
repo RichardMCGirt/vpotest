@@ -267,44 +267,42 @@ tr:nth-child(odd) {
         flex-direction: column;
         height: 100vh; /* Set height to viewport height */
         overflow: hidden; /* Prevent body scroll */
-        margin: 20 px;
+        margin: 20px; /* Corrected margin */
         color: #333;
     }
 
-    h2{
+    h2 {
         display: none;
     }
 
     .table-container {
-        max-height: calc(100vh - 40px); /* Use remaining viewport height */
-        overflow-y: auto; /* Enable vertical scrolling if table exceeds height */
+        max-height: calc(100vh - 60px); /* Set max height, leaving 60px for other content */
+        overflow-y: auto; /* Enable vertical scrolling */
         margin-top: 10px; /* Adjust top margin */
-        padding-bottom: 20px;
-
+        padding-bottom: 20px; /* Ensure some bottom padding */
     }
 
     table {
         font-size: 12px; /* Adjust font size */
         width: 100%; /* Let the table take full width of the screen */
-        padding-bottom: 20px;
     }
 
     td, th {
-        padding: 6px; /* Reduce padding to fit more content on the screen */
-        font-size: 12px; /* Smaller font size for better content fit */
+        padding: 6px; /* Reduce padding */
+        font-size: 12px; /* Smaller font size */
     }
 
     /* 3D Effect for input fields */
-input[type="text"] {
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    width: 200px;
-    margin-top: 15px;
-    transition: all 0.3s ease-in-out;
-    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), 2px 2px 5px rgba(0, 0, 0, 0.15);
-}
+    input[type="text"] {
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        width: 200px;
+        margin-top: 15px;
+        transition: all 0.3s ease-in-out;
+        box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), 2px 2px 5px rgba(0, 0, 0, 0.15);
+    }
 
     .sticky-button {
         padding: 6px 12px;
