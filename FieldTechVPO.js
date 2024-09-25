@@ -168,10 +168,59 @@ document.addEventListener("DOMContentLoaded", async function () {
             </td>
         `;
 
+        const checkbox = recordRow.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener('click', handleCheckboxClick);
+
         return recordRow;
     }
 
-    // Filter records based on search query
+    function handleCheckboxClick(event) {
+        const checkbox = event.target;
+        const recordId = checkbox.getAttribute('data-record-id');
+        const isChecked = checkbox.checked;
+
+        const initialChecked = checkbox.getAttribute('data-initial-checked') === 'checked';
+
+        // If the checkbox is not initially checked and user checks it, ask for confirmation
+        if (!initialChecked && isChecked) {
+            const confirmation = window.confirm("Are you sure you want to mark this as complete?");
+            if (confirmation) {
+                // If confirmed, submit the update to Airtable
+                submitUpdate(recordId, isChecked);
+            } else {
+                // If not confirmed, revert the checkbox to its initial state
+                checkbox.checked = initialChecked;
+            }
+        }
+    }
+
+    async function submitUpdate(recordId, isChecked) {
+        console.log(`Submitting update for record ID ${recordId}...`);
+
+        try {
+            await axios.patch(`${airtableEndpoint}/${recordId}`, {
+                fields: {
+                    'Field Tech Confirmed Job Complete': isChecked,
+                    'Field Tech Confirmed Job Completed Date': new Date().toISOString()
+                }
+            });
+
+            console.log(`Record ID ${recordId} updated successfully.`);
+            alert(`Record ID ${recordId} updated successfully.`);
+            location.reload(); // Refresh the page after successful submission
+
+        } catch (error) {
+            console.error('Error updating record:', error);
+            alert(`Error updating record ID ${recordId}. Please try again.`);
+        }
+    }
+
+    // Real-time search filtering
+    document.getElementById('searchBar').addEventListener('input', (event) => {
+        const searchTerm = event.target.value;
+        filterRecords(searchTerm);
+    });
+
     function filterRecords(searchTerm) {
         const filteredRecords = allRecords.filter(record => {
             const jobName = record.fields['Job Name'] ? record.fields['Job Name'].toLowerCase() : '';
@@ -180,12 +229,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         });
         displayRecords(filteredRecords);
     }
-
-    // Add event listener to the search bar for real-time filtering
-    document.getElementById('searchBar').addEventListener('input', (event) => {
-        const searchTerm = event.target.value;
-        filterRecords(searchTerm);
-    });
 
     fetchUncheckedRecords();
 });

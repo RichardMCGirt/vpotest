@@ -82,7 +82,7 @@ button:hover {
     overflow-x: auto; /* Enable horizontal scrolling if table is too wide */
     margin-top: 15px; /* Optional: Add some margin to space the table from the other content */
     border: #24346c;
-    margin-bottom: 15px;
+    margin-bottom: 45px;
 }
 
 
@@ -191,6 +191,7 @@ tr:nth-child(odd) {
     table {
         font-size: 12px; /* Decrease font size for mobile */
         width: 100%; /* Let the table take full width of the screen */
+        margin-bottom: 20px;
     }
 
     td, th {
@@ -227,18 +228,30 @@ tr:nth-child(odd) {
         justify-content: flex-start;
     }
 
+    /* 3D Effect for input fields */
+input[type="text"] {
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-top: 15px;
+    transition: all 0.3s ease-in-out;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), 2px 2px 5px rgba(0, 0, 0, 0.15);
+}
+
     h2 {
         font-size: 20px;
+        display: none;
     }
 
     .search-container {
         width: 90%; /* Increase width in landscape for better spacing */
+        margin-top: 5px;
     }
 
     table {
-        width: 95%; /* Allow table to take full width of the screen */
-        min-width: 500px; /* Slightly reduce minimum width in landscape */
-        height: auto;
+        width: 100%; /* Allow table to take full width of the screen */
+        padding-bottom: 45px;
     }
 
     td, th {
