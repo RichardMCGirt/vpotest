@@ -267,8 +267,8 @@ tr:nth-child(odd) {
         flex-direction: column;
         height: 100vh; /* Set height to viewport height */
         overflow: hidden; /* Prevent body scroll */
-        margin: 20px; /* Corrected margin */
         color: #333;
+        margin-bottom: 15%;
     }
 
     h2 {
