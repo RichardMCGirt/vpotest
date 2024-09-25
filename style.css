@@ -216,7 +216,7 @@ tr:nth-child(odd) {
 /* General mobile-specific styling */
 @media only screen and (max-width: 768px) {
     body {
-        margin-top: 20px;  /* Add margin to the top for spacing */
+        margin-top: 10px;  /* Add margin to the top for spacing */
         margin-bottom: 20px; /* Add margin to the bottom for spacing */
     }
 
@@ -276,7 +276,7 @@ tr:nth-child(odd) {
     }
 
     .table-container {
-        max-height: calc(100vh - 120px); /* Use remaining viewport height */
+        max-height: calc(100vh - 140px); /* Use remaining viewport height */
         overflow-y: auto; /* Enable vertical scrolling if table exceeds height */
         margin-top: 15px; /* Adjust top margin */
     }
