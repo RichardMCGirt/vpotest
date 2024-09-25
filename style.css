@@ -5,7 +5,6 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     height: 100vh; /* Set height to viewport height */
     overflow: hidden; /* Prevent body scroll */
     margin: 0;
@@ -108,7 +107,7 @@ button:hover {
 
 /* Table styling */
 .table-container {
-    width: 90%; /* Full width */
+    width: 95%; /* Full width */
     max-height: 1100px; /* Set a maximum height for the container */
     overflow-y: auto; /* Enable vertical scrolling if content exceeds the max height */
     overflow-x: auto; /* Enable horizontal scrolling if table is too wide */
@@ -216,9 +215,16 @@ tr:nth-child(odd) {
 
 /* General mobile-specific styling */
 @media only screen and (max-width: 768px) {
+    body {
+        margin-top: 20px;  /* Add margin to the top for spacing */
+        margin-bottom: 20px; /* Add margin to the bottom for spacing */
+    }
+
     .table-container {
         overflow-x: auto; /* Enable horizontal scrolling */
-        max-height: 60vh; /* Ensure the table doesn't exceed 60% of the viewport height */
+        max-height: 75vh; /* Ensure the table doesn't exceed 60% of the viewport height */
+        margin-top: 10px;  /* Adjust top margin */
+        margin-bottom: 10px; /* Adjust bottom margin */
     }
 
     table {
@@ -255,13 +261,24 @@ tr:nth-child(odd) {
 /* Optimize for landscape mobile views */
 @media only screen and (max-width: 1024px) and (orientation: landscape) {
     body {
-        justify-content: flex-start;
+        font-family: Arial, sans-serif;
+        background-color: #d0d2d6;
+        display: flex;
+        flex-direction: column;
+        height: 100vh; /* Set height to viewport height */
+        overflow: hidden; /* Prevent body scroll */
+        margin: 20 px;
+        color: #333;
+    }
+
+    h2{
+        display: none;
     }
 
     .table-container {
         max-height: calc(100vh - 120px); /* Use remaining viewport height */
         overflow-y: auto; /* Enable vertical scrolling if table exceeds height */
-        margin-bottom: 20px;
+        margin-top: 15px; /* Adjust top margin */
     }
 
     table {
@@ -274,6 +291,18 @@ tr:nth-child(odd) {
         padding: 6px; /* Reduce padding to fit more content on the screen */
         font-size: 12px; /* Smaller font size for better content fit */
     }
+
+    /* 3D Effect for input fields */
+input[type="text"] {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 200px;
+    margin-top: 15px;
+    transition: all 0.3s ease-in-out;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), 2px 2px 5px rgba(0, 0, 0, 0.15);
+}
 
     .sticky-button {
         padding: 6px 12px;
