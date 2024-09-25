@@ -299,7 +299,7 @@ tr:nth-child(odd) {
         border: 1px solid #ddd;
         border-radius: 5px;
         width: 200px;
-        margin-top: 15px;
+        margin-top: 5px;
         transition: all 0.3s ease-in-out;
         box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), 2px 2px 5px rgba(0, 0, 0, 0.15);
     }
