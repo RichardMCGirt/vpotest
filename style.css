@@ -12,6 +12,38 @@ body {
     color: #333;
 }
 
+/* Modal styling */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Fixed positioning to cover the entire viewport */
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%); /* Translate to center */
+    width: auto; /* Adjust width as needed */
+    background-color: rgba(0, 0, 0, 0.4); /* Black background with opacity */
+    z-index: 1000; /* Ensure it's on top */
+    padding: 20px; /* Add some padding if needed */
+    box-sizing: border-box;
+}
+
+/* Optional: Modal content styling */
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px; /* Set a fixed width for the modal content */
+    text-align: center;
+}
+
+
+.modal button {
+    margin: 5px;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+
 .table-container {
     width: 90%; /* Full width */
     max-height: 40vh; /* Set max height relative to viewport */

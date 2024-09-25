@@ -10,6 +10,10 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     let allRecords = [];
 
+    const modal = document.getElementById('confirmationModal');
+    const yesButton = document.getElementById('yesButton');
+    const noButton = document.getElementById('noButton');
+
     async function fetchAllRecords() {
         let records = [];
         let offset = null;
@@ -175,24 +179,28 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     function handleCheckboxClick(event) {
-        const checkbox = event.target;
-        const recordId = checkbox.getAttribute('data-record-id');
-        const isChecked = checkbox.checked;
+        currentCheckbox = event.target;
+        currentRecordId = currentCheckbox.getAttribute('data-record-id');
+        const isChecked = currentCheckbox.checked;
+        const initialChecked = currentCheckbox.getAttribute('data-initial-checked') === 'checked';
 
-        const initialChecked = checkbox.getAttribute('data-initial-checked') === 'checked';
-
-        // If the checkbox is not initially checked and user checks it, ask for confirmation
+        // If the checkbox is not initially checked and user checks it, show the custom modal for confirmation
         if (!initialChecked && isChecked) {
-            const confirmation = window.confirm("Are you sure you want to mark this as complete?");
-            if (confirmation) {
-                // If confirmed, submit the update to Airtable
-                submitUpdate(recordId, isChecked);
-            } else {
-                // If not confirmed, revert the checkbox to its initial state
-                checkbox.checked = initialChecked;
-            }
+            modal.style.display = 'block'; // Show the modal
         }
     }
+
+    yesButton.addEventListener('click', () => {
+        // If confirmed, submit the update to Airtable
+        submitUpdate(currentRecordId, true);
+        modal.style.display = 'none'; // Hide the modal after action
+    });
+
+    noButton.addEventListener('click', () => {
+        // If not confirmed, revert the checkbox to its initial state
+        currentCheckbox.checked = false;
+        modal.style.display = 'none'; // Hide the modal
+    });
 
     async function submitUpdate(recordId, isChecked) {
         console.log(`Submitting update for record ID ${recordId}...`);
