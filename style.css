@@ -276,9 +276,11 @@ tr:nth-child(odd) {
     }
 
     .table-container {
-        max-height: calc(100vh - 140px); /* Use remaining viewport height */
+        max-height: calc(100vh - 280px); /* Use remaining viewport height */
         overflow-y: auto; /* Enable vertical scrolling if table exceeds height */
-        margin-top: 15px; /* Adjust top margin */
+        margin-top: 10px; /* Adjust top margin */
+        padding-bottom: 20px;
+
     }
 
     table {
