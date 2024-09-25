@@ -10,17 +10,10 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     let allRecords = [];
 
-    // Create a div for the validation message
-    const validationMessageDiv = document.createElement('div');
-    validationMessageDiv.id = 'validationMessage';
-    validationMessageDiv.style.display = 'none'; // Hide initially
-    validationMessageDiv.style.color = 'red'; // Set color to red for error message
-    document.body.appendChild(validationMessageDiv); // Append to the body
-
     async function fetchAllRecords() {
         let records = [];
         let offset = null;
-    
+
         do {
             try {
                 const response = await fetch(`${airtableEndpoint}?${new URLSearchParams({ offset })}`, {
@@ -28,17 +21,17 @@ document.addEventListener("DOMContentLoaded", async function () {
                         Authorization: `Bearer ${airtableApiKey}`
                     }
                 });
-    
+
                 if (!response.ok) {
                     throw new Error(`Error fetching records: ${response.status} ${response.statusText}`);
                 }
-    
+
                 const data = await response.json();
-    
+
                 if (!data.records) {
                     throw new Error('No records found in the response.');
                 }
-    
+
                 records = records.concat(data.records.map(record => ({
                     id: record.id,
                     fields: record.fields,
@@ -50,10 +43,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 break; // Stop the loop if there's an error
             }
         } while (offset);
-    
+
         return records;
     }
-    
 
     async function fetchUncheckedRecords() {
         try {
@@ -113,13 +105,13 @@ document.addEventListener("DOMContentLoaded", async function () {
         const tableHeader = `
             <thead>
                 <tr>
-                <th style="width: 8%;">ID Number</th>
-                <th>Branch</th>
+                    <th style="width: 8%;">ID Number</th>
+                    <th>Branch</th>
                     <th>Job Name</th>
                     <th>Description of Work</th>
                     <th>Field Technician</th>
                     <th style="width: 13%;">Confirmed Complete</th>
-                    </tr>
+                </tr>
             </thead>
             <tbody>
             </tbody>
@@ -155,7 +147,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     function createRecordRow(record) {
         const recordRow = document.createElement('tr');
         const IDNumber = record.fields['ID Number'] || '';
-
         const vanirOffice = record.fields['static Vanir Office'] || '';
         const jobName = record.fields['Job Name'] || '';
         const fieldTechnician = record.fields['static Field Technician'] || '';
@@ -164,8 +155,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         const descriptionOfWork = record.descriptionOfWork || '';
 
         recordRow.innerHTML = `
-        <td>${IDNumber}</td>
-
+            <td>${IDNumber}</td>
             <td>${vanirOffice}</td>
             <td>${jobName}</td>
             <td>${descriptionOfWork}</td>
@@ -178,75 +168,24 @@ document.addEventListener("DOMContentLoaded", async function () {
             </td>
         `;
 
-        const checkbox = recordRow.querySelector('input[type="checkbox"]');
-
-        // Add event listener for click instead of blur
-        checkbox.addEventListener('click', handleCheckboxClick);
-
         return recordRow;
     }
 
-    function handleCheckboxClick(event) {
-        const checkbox = event.target;
-        const recordId = checkbox.getAttribute('data-record-id');
-        const isChecked = checkbox.checked;
-
-        let updates = JSON.parse(localStorage.getItem('updates')) || {};
-
-        // Validation: Only submit if there is a change
-        const initialChecked = checkbox.getAttribute('data-initial-checked') === 'checked';
-
-        if (initialChecked !== isChecked) {
-            const confirmation = window.confirm("Are you sure you want to mark this as complete?");
-            if (confirmation) {
-                updates[recordId] = isChecked;
-                localStorage.setItem('updates', JSON.stringify(updates));
-                submitUpdate(recordId, isChecked);
-                validationMessageDiv.style.display = 'none'; // Hide validation message if confirmed
-            } else {
-                // If user clicks "No", revert the checkbox to its initial state
-                checkbox.checked = initialChecked;
-                validationMessageDiv.innerText = "Action canceled.";
-                validationMessageDiv.style.display = 'block'; // Show validation message
-            }
-        } else {
-            validationMessageDiv.innerText = "No changes detected.";
-            validationMessageDiv.style.display = 'block'; // Show validation message if no change is detected
-        }
-    }
-
-    async function submitUpdate(recordId, isChecked) {
-        console.log(`Submitting update for record ID ${recordId}...`);
-    
-        try {
-            await axios.patch(`${airtableEndpoint}/${recordId}`, {
-                fields: {
-                    'Field Tech Confirmed Job Complete': isChecked,
-                    'Field Tech Confirmed Job Completed Date': new Date().toISOString()
-                }
-            });
-    
-            console.log(`Record ID ${recordId} updated successfully.`);
-            alert(`Record ID ${recordId} updated successfully.`);
-    
-            // Refresh the page after successful submission
-            location.reload();
-            
-        } catch (error) {
-            console.error('Error updating record:', error);
-            alert(`Error updating record ID ${recordId}. Please try again.`);
-        }
-    }
-    
-
-    fetchAllRecords()
-        .then(records => {
-            console.log('Total records fetched:', records.length);
-            console.log(records);
-        })
-        .catch(error => {
-            console.error('Error fetching records:', error);
+    // Filter records based on search query
+    function filterRecords(searchTerm) {
+        const filteredRecords = allRecords.filter(record => {
+            const jobName = record.fields['Job Name'] ? record.fields['Job Name'].toLowerCase() : '';
+            const descriptionOfWork = record.fields['Description of Work'] ? record.fields['Description of Work'].toLowerCase() : '';
+            return jobName.includes(searchTerm.toLowerCase()) || descriptionOfWork.includes(searchTerm.toLowerCase());
         });
+        displayRecords(filteredRecords);
+    }
+
+    // Add event listener to the search bar for real-time filtering
+    document.getElementById('searchBar').addEventListener('input', (event) => {
+        const searchTerm = event.target.value;
+        filterRecords(searchTerm);
+    });
 
     fetchUncheckedRecords();
 });

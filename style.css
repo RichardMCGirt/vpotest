@@ -25,7 +25,6 @@ body {
 
 
 h2 {
-    margin-top: 30px;
     color: #24346c;
     font-size: 24px;
 }
@@ -83,7 +82,7 @@ button:hover {
     overflow-x: auto; /* Enable horizontal scrolling if table is too wide */
     margin-top: 15px; /* Optional: Add some margin to space the table from the other content */
     border: #24346c;
-    margin-bottom: 40px;
+    margin-bottom: 15px;
 }
 
 
