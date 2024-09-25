@@ -276,10 +276,10 @@ tr:nth-child(odd) {
     }
 
     .table-container {
-        max-height: calc(100vh - 60px); /* Set max height, leaving 60px for other content */
+        max-height: calc(100vh - 90px); /* Set max height, leaving 60px for other content */
         overflow-y: auto; /* Enable vertical scrolling */
         margin-top: 10px; /* Adjust top margin */
-        padding-bottom: 20px; /* Ensure some bottom padding */
+        padding-bottom: 60px; /* Ensure some bottom padding */
     }
 
     table {
