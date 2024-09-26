@@ -9,14 +9,21 @@
 <body>
     <h2 id="searchBarTitle" class="hidden">Open VPOs Awaiting Field Tech</h2>
     <div>
-        <input type="text" id="searchBar" class="hidden"  placeholder="Search by Job Name or Description of Work">
+        <input type="text" id="searchBar" class="hidden"  placeholder="Search">
 
         <button id="searchButton" style="display: none;">Search</button>
     </div>
     <p id="displayName"></p>
-    <button id="changeNameButton">Change Name</button>
+    <label for="techDropdown">Select Technician:</label>
+    <select id="techDropdown">
+        <option value="">Select a Technician</option>
+    </select>
     
-
+    
+    <br>
+    <label>
+        <input type="checkbox" id="toggleRecordsCheckbox" /> Show All Incompleted Jobs
+    </label>
     <div id="loadingMessage"></div>
     
     <!-- Table is wrapped in a scrollable div -->

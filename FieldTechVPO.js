@@ -3,24 +3,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     const storedTech = localStorage.getItem('fieldTech');
     const displayNameElement = document.getElementById('displayName');
-    const changeNameButton = document.getElementById('changeNameButton');
-
-    if (!storedTech) {
-        const techName = prompt("Please enter your name or ID:");
-        localStorage.setItem('fieldTech', techName);
-    }
-
-    const fieldTech = localStorage.getItem('fieldTech');
-    displayNameElement.innerText = `Logged in as: ${fieldTech}`;
-
-    changeNameButton.addEventListener('click', () => {
-        const newName = prompt("Enter your name to only see your records:");
-        if (newName) {
-            localStorage.setItem('fieldTech', newName);
-            displayNameElement.innerText = `Logged in as: ${newName}`;
-            fetchRecordsForTech(newName); // Re-fetch records for the new technician.
-        }
-    });
+    const techDropdown = document.getElementById('techDropdown'); // Get the dropdown element
 
     const airtableApiKey = 'pata9Iv7DANqtJrgO.b308b33cd0f323601f3fb580aac0d333ca1629dd26c5ebe2e2b9f18143ccaa8e';
     const airtableBaseId = 'appQDdkj6ydqUaUkE';
@@ -29,15 +12,67 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     axios.defaults.headers.common['Authorization'] = `Bearer ${airtableApiKey}`;
 
-    let allRecords = [];
     let technicianRecords = []; // Store records fetched for the logged-in technician
 
-    const modal = document.getElementById('confirmationModal');
-    const yesButton = document.getElementById('yesButton');
-    const noButton = document.getElementById('noButton');
-    const searchBar = document.getElementById('searchBar');
+    // Fetch unique technician names from Airtable
+    async function fetchUniqueTechnicians() {
+        try {
+            let technicians = new Set(); // Use a Set to ensure uniqueness
+            let offset = '';
 
-    // Fetch records for the logged-in technician initially
+            do {
+                const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
+                const records = response.data.records;
+
+                records.forEach(record => {
+                    const techName = record.fields['static Field Technician'];
+                    if (techName) {
+                        technicians.add(techName); // Add technician name to the Set
+                    }
+                });
+
+                offset = response.data.offset || '';
+            } while (offset);
+
+            return Array.from(technicians); // Convert the Set to an Array
+        } catch (error) {
+            console.error('Error fetching technicians:', error);
+            return [];
+        }
+    }
+
+    // Populate dropdown with technician names
+    async function populateDropdown() {
+        const technicians = await fetchUniqueTechnicians();
+
+        // Clear the dropdown
+        techDropdown.innerHTML = '<option value="">Select a Technician</option>';
+
+        // Populate the dropdown with unique technician names
+        technicians.forEach(tech => {
+            const option = document.createElement('option');
+            option.value = tech;
+            option.innerText = tech;
+            techDropdown.appendChild(option);
+        });
+
+        // If technician name is stored, set it as selected in the dropdown
+        if (storedTech) {
+            displayNameElement.innerText = `Logged in as: ${storedTech}`;
+            techDropdown.value = storedTech;
+        }
+    }
+
+    // Handle dropdown change event
+    techDropdown.addEventListener('change', () => {
+        const selectedTech = techDropdown.value;
+        if (selectedTech) {
+            localStorage.setItem('fieldTech', selectedTech);
+            displayNameElement.innerText = `Logged in as: ${selectedTech}`;
+            fetchRecordsForTech(selectedTech); // Re-fetch records for the selected technician
+        }
+    });
+
     async function fetchRecordsForTech(fieldTech) {
         try {
             showLoadingMessage();
@@ -62,35 +97,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             displayRecords(technicianRecords); // Initially display only the technician's incomplete records
         } catch (error) {
             console.error('Error fetching records:', error);
-        } finally {
-            hideLoadingMessage();
-        }
-    }
-
-    // Fetch all records (only when the search bar is used)
-    async function fetchAllRecords() {
-        try {
-            showLoadingMessage();
-            console.log('Fetching all records from Airtable...');
-
-            let records = [];
-            let offset = '';
-
-            do {
-                const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
-                records = records.concat(response.data.records.map(record => ({
-                    id: record.id,
-                    fields: record.fields,
-                    descriptionOfWork: record.fields['Description of Work']
-                })));
-                offset = response.data.offset || '';
-            } while (offset);
-
-            console.log('All records fetched successfully:', records);
-            allRecords = records.filter(record => !record.fields['Field Tech Confirmed Job Complete']); // Filter for incomplete records
-            filterRecords(searchBar.value.toLowerCase()); // Apply the current search filter once all records are fetched
-        } catch (error) {
-            console.error('Error fetching all records:', error);
         } finally {
             hideLoadingMessage();
         }
@@ -230,37 +236,11 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Trigger fetching of all records when typing in the search bar
-    document.getElementById('searchBar').addEventListener('input', (event) => {
-        const searchTerm = event.target.value.toLowerCase();
-        if (searchTerm.length > 0) {
-            // If the search bar is not empty, fetch all records
-            fetchAllRecords();
-        } else {
-            // If the search bar is cleared, show the technician's incomplete records again
-            displayRecords(technicianRecords);
-        }
-    });
+    // Populate dropdown with unique technician names on page load
+    populateDropdown();
 
-    // Filter records based on the search term
-    function filterRecords(searchTerm) {
-        const filteredRecords = allRecords.filter(record => {
-            const idNumber = record.fields['ID Number'] ? record.fields['ID Number'].toString().toLowerCase() : '';
-            const vanirOffice = record.fields['static Vanir Office'] ? record.fields['static Vanir Office'].toLowerCase() : '';
-            const jobName = record.fields['Job Name'] ? record.fields['Job Name'].toLowerCase() : '';
-            const descriptionOfWork = record.fields['Description of Work'] ? record.fields['Description of Work'].toLowerCase() : '';
-            const fieldTechnician = record.fields['static Field Technician'] ? record.fields['static Field Technician'].toLowerCase() : '';
-
-            return idNumber.includes(searchTerm) ||
-                vanirOffice.includes(searchTerm) ||
-                jobName.includes(searchTerm) ||
-                descriptionOfWork.includes(searchTerm) ||
-                fieldTechnician.includes(searchTerm);
-        });
-
-        displayRecords(filteredRecords);
+    // Fetch records for the logged-in technician on page load if available
+    if (storedTech) {
+        fetchRecordsForTech(storedTech);
     }
-
-    // Fetch records for the logged-in technician on page load
-    fetchRecordsForTech(fieldTech);
 });
