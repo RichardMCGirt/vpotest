@@ -14,42 +14,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const yesButton = document.getElementById('yesButton');
     const noButton = document.getElementById('noButton');
 
-    async function fetchAllRecords() {
-        let records = [];
-        let offset = null;
 
-        do {
-            try {
-                const response = await fetch(`${airtableEndpoint}?${new URLSearchParams({ offset })}`, {
-                    headers: {
-                        Authorization: `Bearer ${airtableApiKey}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Error fetching records: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-
-                if (!data.records) {
-                    throw new Error('No records found in the response.');
-                }
-
-                records = records.concat(data.records.map(record => ({
-                    id: record.id,
-                    fields: record.fields,
-                    descriptionOfWork: record.fields['Description of Work'] // Fetch 'Description of Work' field
-                })));
-                offset = data.offset;
-            } catch (error) {
-                console.error('Error fetching records:', error);
-                break; // Stop the loop if there's an error
-            }
-        } while (offset);
-
-        return records;
-    }
 
     async function fetchUncheckedRecords() {
         try {
