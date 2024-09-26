@@ -231,12 +231,22 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     function filterRecords(searchTerm) {
         const filteredRecords = allRecords.filter(record => {
+            const idNumber = record.fields['ID Number'] ? record.fields['ID Number'].toString().toLowerCase() : '';
+            const vanirOffice = record.fields['static Vanir Office'] ? record.fields['static Vanir Office'].toLowerCase() : '';
             const jobName = record.fields['Job Name'] ? record.fields['Job Name'].toLowerCase() : '';
             const descriptionOfWork = record.fields['Description of Work'] ? record.fields['Description of Work'].toLowerCase() : '';
-            return jobName.includes(searchTerm.toLowerCase()) || descriptionOfWork.includes(searchTerm.toLowerCase());
+            const fieldTechnician = record.fields['static Field Technician'] ? record.fields['static Field Technician'].toLowerCase() : '';
+    
+            return idNumber.includes(searchTerm.toLowerCase()) ||
+                   vanirOffice.includes(searchTerm.toLowerCase()) ||
+                   jobName.includes(searchTerm.toLowerCase()) ||
+                   descriptionOfWork.includes(searchTerm.toLowerCase()) ||
+                   fieldTechnician.includes(searchTerm.toLowerCase());
         });
+    
         displayRecords(filteredRecords);
     }
-
+    
     fetchUncheckedRecords();
-});
+    });
+    
