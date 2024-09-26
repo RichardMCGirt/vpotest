@@ -46,7 +46,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         const technicians = await fetchUniqueTechnicians();
 
         // Clear the dropdown
-        techDropdown.innerHTML = '<option value="">Select a Technician</option>';
+        techDropdown.innerHTML = `
+            <option value="">Select a Technician</option>
+            <option value="all">Display All</option>
+        `;
 
         // Populate the dropdown with unique technician names
         technicians.forEach(tech => {
@@ -57,22 +60,44 @@ document.addEventListener("DOMContentLoaded", async function () {
         });
 
         // If technician name is stored, set it as selected in the dropdown
-        if (storedTech) {
+        if (storedTech && storedTech !== "all") {
             displayNameElement.innerText = `Logged in as: ${storedTech}`;
             techDropdown.value = storedTech;
+        } else if (storedTech === "all") {
+            techDropdown.value = "all"; // Select "Display All" if it was previously chosen
         }
     }
 
-    // Handle dropdown change event
-    techDropdown.addEventListener('change', () => {
-        const selectedTech = techDropdown.value;
-        if (selectedTech) {
-            localStorage.setItem('fieldTech', selectedTech);
-            displayNameElement.innerText = `Logged in as: ${selectedTech}`;
-            fetchRecordsForTech(selectedTech); // Re-fetch records for the selected technician
-        }
-    });
+    // Fetch all incomplete records (for "Display All" option)
+    async function fetchAllIncompleteRecords() {
+        try {
+            showLoadingMessage();
+            console.log(`Fetching all incomplete records from Airtable...`);
 
+            let records = [];
+            let offset = '';
+
+            do {
+                const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
+                records = records.concat(response.data.records.map(record => ({
+                    id: record.id,
+                    fields: record.fields,
+                    descriptionOfWork: record.fields['Description of Work']
+                })));
+                offset = response.data.offset || '';
+            } while (offset);
+
+            // Filter records to only show those that are not completed
+            const incompleteRecords = records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
+            displayRecords(incompleteRecords); // Display all incomplete records
+        } catch (error) {
+            console.error('Error fetching all incomplete records:', error);
+        } finally {
+            hideLoadingMessage();
+        }
+    }
+
+    // Fetch records for the selected technician
     async function fetchRecordsForTech(fieldTech) {
         try {
             showLoadingMessage();
@@ -92,9 +117,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 offset = response.data.offset || '';
             } while (offset);
 
-            console.log('Technician records fetched successfully:', records);
-            technicianRecords = records.filter(record => !record.fields['Field Tech Confirmed Job Complete']); // Only show incomplete records
-            displayRecords(technicianRecords); // Initially display only the technician's incomplete records
+            // Filter records to show only those that are not completed
+            technicianRecords = records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
+            displayRecords(technicianRecords); // Display the selected technician's records
         } catch (error) {
             console.error('Error fetching records:', error);
         } finally {
@@ -236,11 +261,25 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
+    // Handle dropdown change event
+    techDropdown.addEventListener('change', () => {
+        const selectedTech = techDropdown.value;
+        if (selectedTech === "all") {
+            fetchAllIncompleteRecords(); // Fetch and display all incomplete records
+        } else if (selectedTech) {
+            localStorage.setItem('fieldTech', selectedTech);
+            displayNameElement.innerText = `Logged in as: ${selectedTech}`;
+            fetchRecordsForTech(selectedTech); // Re-fetch records for the selected technician
+        }
+    });
+
     // Populate dropdown with unique technician names on page load
     populateDropdown();
 
     // Fetch records for the logged-in technician on page load if available
-    if (storedTech) {
+    if (storedTech && storedTech !== "all") {
         fetchRecordsForTech(storedTech);
+    } else if (storedTech === "all") {
+        fetchAllIncompleteRecords(); // Fetch all incomplete records if "Display All" was previously selected
     }
 });
