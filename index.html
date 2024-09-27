@@ -37,13 +37,15 @@
         </table>
     </div>
 
-    <div id="confirmationModal" class="modal">
-        <div class="modal-content">
-          <p id="modalMessage">Are you sure you want to mark this as complete?</p>
-          <button id="yesButton">Yes</button>
-          <button id="noButton">No</button>
-        </div>
-      </div>
+    <div class="modal-overlay" id="modalOverlay"></div>
+
+    <div id="modal">
+        <p>Are you sure you want to confirm the job is complete?</p>
+        <button id="yesButton">Yes</button>
+        <button id="noButton">No</button>
+    </div>
+    
+    
       
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>

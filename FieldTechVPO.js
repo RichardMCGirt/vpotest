@@ -256,12 +256,17 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         return recordRow;
     }
+    const modal = document.getElementById('modal');  // Reference the modal element
+    const yesButton = document.getElementById('yesButton');
+    const noButton = document.getElementById('noButton');
+
 
     function handleCheckboxClick(event) {
         currentCheckbox = event.target;
         currentRecordId = currentCheckbox.getAttribute('data-record-id');
         const isChecked = currentCheckbox.checked;
         const initialChecked = currentCheckbox.getAttribute('data-initial-checked') === 'checked';
+        modal.style.display = 'block';
 
         if (!initialChecked && isChecked) {
             modal.style.display = 'block';
