@@ -11,6 +11,11 @@ body {
     overflow: hidden; /* Prevent unnecessary scrolling */
 }
 
+.underline {
+    text-decoration: underline;
+}
+
+
 #loadingBarContainer {
     position: fixed; /* Fixed position ensures it stays in the center when scrolling */
     top: 50%; /* Align vertically center */
