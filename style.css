@@ -1,45 +1,47 @@
-/* Responsive layout for the body */
+/* General body styling */
 body {
     font-family: Arial, sans-serif;
     background-color: #d0d2d6;
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100vh; /* Set height to viewport height */
-    overflow: hidden; /* Prevent body scroll */
+    height: 100vh; /* Full viewport height */
     margin: 0;
     color: #333;
+    overflow: hidden; /* Prevent unnecessary scrolling */
 }
 
-/* Ensure the table container is responsive */
+/* Table container for responsiveness */
 .table-container {
-    width: 95%; /* Full width with some margin */
-    max-height: 70vh; /* Limit the table's height to 70% of the viewport */
-    overflow-y: auto; /* Enable vertical scrolling if content exceeds max height */
-    overflow-x: auto; /* Enable horizontal scrolling if table is too wide */
-    margin-top: 15px; /* Add space above the table */
-    border: 2px solid #24346c; /* Solid border around the entire container */
-    background-color: #fff; /* Add background color to avoid transparent scroll area */
-    box-sizing: border-box; /* Ensure padding and border are included in the element's width/height */
+    width: 100%; /* Full width */
+    max-width: 95vw; /* Responsive width for large screens */
+    max-height: 70vh; /* Max height of 70% viewport */
+    overflow-x: auto; /* Horizontal scroll if table is too wide */
+    overflow-y: auto; /* Vertical scroll for large tables */
+    margin: 15px 0 30px; /* Add margin at top and bottom */
+    border: 2px solid #24346c;
+    background-color: #fff;
     padding: 10px;
-    border-radius: 8px; /* Rounded corners for aesthetic */
+    border-radius: 8px;
+    box-sizing: border-box; /* Include padding in width/height */
 }
 
-/* Responsive table layout */
+/* Table styling */
 table {
-    width: 100%; /* Ensure the table takes up the full width of the container */
-    border-collapse: collapse; /* Collapsed borders for a cleaner look */
-    border: 2px solid #24346c; /* Border around the table */
+    width: 100%; /* Full width */
+    min-width: 600px; /* Prevent table from collapsing on small screens */
+    border-collapse: collapse;
+    border: 2px solid #24346c;
 }
 
 th, td {
     padding: 10px;
-    border: 1px solid #ddd; /* Inner borders between cells */
+    border: 1px solid #ddd;
     text-align: center;
-    white-space: nowrap; /* Prevent text from wrapping inside the cells */
-    overflow: hidden; /* Hide overflowed content */
-    text-overflow: ellipsis; /* Add ellipsis if text overflows */
-    max-width: 200px; /* Set a maximum width for each cell */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
 }
 
 th {
@@ -54,7 +56,6 @@ th {
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Alternating row colors for readability */
 tr:nth-child(even) {
     background-color: #f9f9f9;
 }
@@ -63,47 +64,96 @@ tr:nth-child(odd) {
     background-color: #ffffff;
 }
 
-/* Ensure the table is responsive on smaller screens */
+/* Responsive design for portrait and landscape modes */
+
+/* Portrait mode */
+@media screen and (orientation: portrait) {
+    .table-container {
+        max-height: 80vh; /* Use more vertical space */
+        margin-bottom: 50px; /* Extra bottom margin */
+    }
+
+    table {
+        font-size: 14px; /* Slightly smaller font for portrait view */
+    }
+    
+    th, td {
+        padding: 8px;
+        max-width: 150px;
+    }
+}
+
+/* Landscape mode */
+@media screen and (orientation: landscape) {
+    .table-container {
+        max-height: 60vh; /* Less height for landscape */
+        margin-bottom: 30px; /* Ensure margin at the bottom */
+    }
+
+    table {
+        font-size: 16px; /* Larger font in landscape view */
+    }
+
+    th, td {
+        padding: 10px;
+        max-width: 200px;
+    }
+
+    
+}
+
+/* Responsive design for different screen sizes */
 @media (max-width: 768px) {
     .table-container {
         width: 100%; /* Full width on smaller screens */
+        max-width: 100vw; /* Ensure it doesn’t overflow the viewport */
+        padding: 5px;
+    }
+
+    table {
+        font-size: 12px;
+        min-width: 100%; /* Ensure table is responsive */
+    }
+    
+    th, td {
+        padding: 8px;
+        max-width: 150px;
+    }
+}
+
+/* Very small screen sizes */
+@media (max-width: 480px) {
+    th, td {
+        font-size: 10px;
         padding: 5px;
     }
     
     table {
-        font-size: 14px; /* Adjust font size for readability on smaller screens */
-    }
-    
-    th, td {
-        padding: 8px; /* Adjust padding for smaller screens */
-        max-width: 150px; /* Decrease the max width for cells */
-    }
-    
-    .custom-checkbox {
-        width: 25px; /* Adjust size for smaller screens */
-        height: 25px;
+        font-size: 10px;
     }
 
-    .custom-checkbox .checkmark {
-        width: 25px;
-        height: 25px;
+    .table-container {
+        width: 95%;
+        padding: 5px;
+        margin-top: 10px;
+        max-height: 85vh; /* Ensure it uses most of the available height */
     }
 }
 
 /* Modal styling */
 #modal {
-    display: none; /* Initially hidden */
-    position: fixed; /* Stays in the same position on the screen */
-    left: 50%; /* Position modal in the center horizontally */
-    top: 50%; /* Position modal in the center vertically */
-    transform: translate(-50%, -50%); /* Adjust position to center */
-    background-color: white; /* Background color of the modal */
-    padding: 20px; /* Padding inside the modal */
-    z-index: 1000; /* Make sure the modal appears on top */
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Shadow for a subtle pop-up effect */
-    border-radius: 10px; /* Rounded corners */
-    width: 300px; /* Width of the modal */
-    text-align: center; /* Center the text inside */
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    z-index: 1000;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
 }
 
 .modal-overlay {
@@ -112,13 +162,10 @@ tr:nth-child(odd) {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    z-index: 999; /* Ensure the overlay is behind the modal but in front of the rest of the content */
-    display: none; /* Initially hidden */
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
 }
-
-
-
 
 .modal-content {
     background-color: #fff;
@@ -133,6 +180,35 @@ tr:nth-child(odd) {
     padding: 10px;
     font-size: 16px;
     cursor: pointer;
+}
+
+/* Modal responsiveness */
+@media (max-width: 768px) {
+    #modal {
+        width: 90%;
+        padding: 15px;
+    }
+
+    .modal-content {
+        width: 100%;
+    }
+
+    .modal button {
+        width: 100px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    #modal {
+        width: 80%;
+        padding: 10px;
+    }
+
+    .modal button {
+        width: 80px;
+        font-size: 12px;
+    }
 }
 
 /* Spinner styling */
@@ -155,7 +231,7 @@ tr:nth-child(odd) {
     100% { transform: rotate(360deg); }
 }
 
-/* Style for the loading bar */
+/* Loading bar styling */
 #loadingBar {
     display: none;
     width: 100%;
@@ -237,10 +313,38 @@ button:hover {
     transform: scale(1.1);
 }
 
-.custom-checkbox .checkmark:after {
-    content: "";
-    position: absolute;
-    display: none;
-    left: 10px;
-   
+/* Custom checkbox responsiveness */
+@media (max-width: 768px) {
+    .custom-checkbox {
+        width: 25px;
+        height: 25px;
+    }
+
+    .custom-checkbox .checkmark {
+        width: 25px;
+        height: 25px;
+    }
+}
+
+@media (max-width: 480px) {
+    .custom-checkbox {
+        width: 20px;
+        height: 20px;
+    }
+
+    .custom-checkbox .checkmark {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* Animation for hover effects */
+button:active {
+    background-color: #1a2c55;
+    box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Transition for all buttons */
+button {
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
