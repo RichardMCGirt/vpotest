@@ -12,6 +12,22 @@ body {
     overflow: hidden; /* Prevent unnecessary scrolling */
 }
 
+/* Hide scrollbar for all browsers */
+.table-container, .table-wrapper {
+    overflow: auto; /* Ensure content can still scroll */
+}
+
+/* Hide scrollbar for Internet Explorer, Edge, and Firefox */
+.table-container, .table-wrapper {
+    -ms-overflow-style: none;  /* Internet Explorer and Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari, and Opera */
+.table-container::-webkit-scrollbar, .table-wrapper::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, and Opera */
+}
+
 
 .underline {
     text-decoration: underline;
