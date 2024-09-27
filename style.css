@@ -51,17 +51,25 @@ body {
 .table-container {
     width: 100%; /* Full width */
     max-width: 95vw; /* Responsive width for large screens */
-    max-height: 80vh; /* Max height of 70% viewport */
+    max-height: 80vh; /* Max height of 80% viewport */
     overflow-x: auto; /* Horizontal scroll if table is too wide */
     overflow-y: auto; /* Vertical scroll for large tables */
     margin: 15px 0 30px; /* Add margin at top and bottom */
     border: 2px solid #24346c;
     background-color: #828080;
-    padding: 10px;
+    padding: 10px; /* Add padding to the container */
     border-radius: 8px;
     box-sizing: border-box; /* Include padding in width/height */
     position: relative;
+}
 
+/* Wrapper around the table */
+.table-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    padding: 0; /* No padding on the table itself */
 }
 
 /* Table styling */
