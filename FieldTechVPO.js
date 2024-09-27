@@ -282,17 +282,25 @@ document.addEventListener("DOMContentLoaded", async function () {
     const noButton = document.getElementById('noButton');
 
 
-    function handleCheckboxClick(event) {
-        currentCheckbox = event.target;
-        currentRecordId = currentCheckbox.getAttribute('data-record-id');
-        const isChecked = currentCheckbox.checked;
-        const initialChecked = currentCheckbox.getAttribute('data-initial-checked') === 'checked';
-        modal.style.display = 'block';
+ // Function to handle checkbox click event
+ function handleCheckboxClick(event) {
+    currentCheckbox = event.target;
+    currentRecordId = currentCheckbox.getAttribute('data-record-id');
+    const isChecked = currentCheckbox.checked;
+    const initialChecked = currentCheckbox.getAttribute('data-initial-checked') === 'checked';
 
-        if (!initialChecked && isChecked) {
-            modal.style.display = 'block';
-        }
+    if (!isChecked) {
+        // Checkbox is unchecked: immediately submit the update without showing the modal or alert
+        console.log('Checkbox unchecked, submitting update immediately...');
+        submitUpdate(currentRecordId, false); // Uncheck action, no modal, no alert
+    } else if (!initialChecked && isChecked) {
+        // Checkbox is checked: show the modal for confirmation
+        console.log('Checkbox checked, showing modal for confirmation...');
+        modal.style.display = 'block'; // Show the modal
     }
+}
+
+    
 
     yesButton.addEventListener('click', () => {
         submitUpdate(currentRecordId, true);
@@ -306,24 +314,30 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     async function submitUpdate(recordId, isChecked) {
         console.log(`Submitting update for record ID ${recordId}...`);
-
+    
         try {
             await axios.patch(`${airtableEndpoint}/${recordId}`, {
                 fields: {
                     'Field Tech Confirmed Job Complete': isChecked,
-                    'Field Tech Confirmed Job Completed Date': new Date().toISOString()
+                    'Field Tech Confirmed Job Completed Date': isChecked ? new Date().toISOString() : null
                 }
             });
-
-            console.log(`Record ID ${recordId} updated successfully.`);
-            alert(`Record ID ${recordId} updated successfully.`);
+    
+            if (isChecked) {
+                // Only show alert if the job is confirmed complete (checked)
+                console.log(`Record ID ${recordId} marked as complete.`);
+                alert(`Record ID ${recordId} updated successfully.`);
+            }
+    
+            // Reload the page to reflect changes without alert on uncheck
             location.reload();
-
+    
         } catch (error) {
             console.error('Error updating record:', error);
             alert(`Error updating record ID ${recordId}. Please try again.`);
         }
     }
+    
 
      // Handle dropdown change event
      techDropdown.addEventListener('change', () => {
