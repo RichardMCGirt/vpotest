@@ -28,23 +28,115 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Show the loading bar
+    let loadingBarTimeout; // To store the timeout reference
+    let loadingStartTime;  // To track when loading started
+    
+    // Show the loading bar after a 3-second delay
     function showLoadingBar() {
-        if (loadingBar) {
-            loadingBar.style.display = 'block';
-        } else {
-            console.error('Loading bar element not found.');
-        }
+        loadingStartTime = Date.now();
+        loadingBarTimeout = setTimeout(() => {
+            const loadingBarContainer = document.getElementById('loadingBarContainer');
+            loadingBarContainer.style.display = 'block'; // Show the loading bar
+            console.log("Loading bar displayed after 3 seconds");
+        }, 3000); // Delay for 3 seconds
     }
-
-    // Hide the loading bar
+    
+    // Hide the loading bar immediately when loading is complete
     function hideLoadingBar() {
-        if (loadingBar) {
-            loadingBar.style.display = 'none';
+        const loadingBarContainer = document.getElementById('loadingBarContainer');
+        
+        // Check if loading finished in less than 3 seconds
+        const elapsedTime = Date.now() - loadingStartTime;
+        if (elapsedTime < 3000) {
+            console.log("Loading completed in less than 3 seconds, not showing the loading bar.");
+            clearTimeout(loadingBarTimeout); // Cancel showing the loading bar if loading finishes quickly
         } else {
-            console.error('Loading bar element not found.');
+            loadingBarContainer.style.display = 'none'; // Hide if the bar was shown
+            console.log("Loading bar hidden.");
         }
     }
+    
+    // Update the loading bar based on progress
+    function updateLoadingBar(current, total) {
+        const loadingBar = document.getElementById('loadingBar');
+        const loadingPercentage = document.getElementById('loadingPercentage');
+        
+        const percentage = Math.min(Math.round((current / total) * 100), 100); // Calculate percentage
+        loadingBar.style.width = `${percentage}%`;  // Update bar width
+        loadingPercentage.innerText = `${percentage}%`;  // Update percentage text
+        
+        console.log(`Loading bar updated: ${percentage}% (${current} of ${total} records fetched).`);
+    }
+    
+
+// Fetch records from Airtable with percentage-based loading
+async function fetchAndDisplayRecords() {
+    const recordsTableBody = document.querySelector('#recordsTable tbody');
+    recordsTableBody.innerHTML = ''; // Clear any existing records
+    
+    try {
+        console.log("Starting to fetch records from Airtable...");
+        showLoadingBar();
+        
+        let totalRecords = 0;
+        let fetchedRecords = 0;
+        let records = [];
+        let offset = '';
+
+        // First, get the total number of records to calculate the percentage
+        const initialResponse = await axios.get(`${airtableEndpoint}?pageSize=1`);
+        totalRecords = initialResponse.data.records.length; // Replace with actual total count logic if available
+        console.log(`Total records to fetch: ${totalRecords}`);
+
+        // Fetch records in pages (or batches)
+        do {
+            console.log(`Fetching batch of records, current offset: ${offset}`);
+            const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
+            const pageRecords = response.data.records;
+            records = records.concat(pageRecords);
+            fetchedRecords += pageRecords.length;
+
+            // Update loading bar
+            updateLoadingBar(fetchedRecords, totalRecords);
+
+            offset = response.data.offset || ''; // Move to the next page of results
+            console.log(`Fetched ${fetchedRecords} records so far.`);
+
+        } while (offset);
+
+        // Hide the loading bar once fetching is complete
+        hideLoadingBar();
+        console.log("Finished fetching all records.");
+
+        // Populate the table with the fetched records
+        console.log("Populating the table with fetched records...");
+        records.forEach(record => {
+            const recordRow = document.createElement('tr');
+            recordRow.innerHTML = `
+                <td>${record.fields['ID Number'] || ''}</td>
+                <td>${record.fields['static Vanir Office'] || ''}</td>
+                <td>${record.fields['Job Name'] || ''}</td>
+                <td>${record.fields['Description of Work'] || ''}</td>
+                <td>${record.fields['static Field Technician'] || ''}</td>
+                <td>${record.fields['Field Tech Confirmed Job Complete'] ? 'Yes' : 'No'}</td>
+            `;
+            recordsTableBody.appendChild(recordRow);
+        });
+
+        console.log(`Total number of records displayed: ${records.length}`);
+    } catch (error) {
+        console.error('Error fetching records:', error);
+        hideLoadingBar(); // Hide the loading bar in case of error
+    }
+}
+
+// Trigger fetching when the page loads or on some event
+document.addEventListener("DOMContentLoaded", async function () {
+    console.log("DOM fully loaded, triggering record fetch...");
+    await fetchAndDisplayRecords(); // Trigger the fetch when the page loads
+});
+
+
 
     // Fetch unique technician names with at least one incomplete record from Airtable
     async function fetchTechniciansWithRecords() {
@@ -124,67 +216,113 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Fetch all incomplete records (for "Display All" option)
-    async function fetchAllIncompleteRecords() {
-        try {
-            showLoadingBar();
-            console.log(`Fetching all incomplete records from Airtable...`);
+ // Fetch all incomplete records (for "Display All" option)
+async function fetchAllIncompleteRecords() {
+    try {
+        showLoadingBar();
+        console.log(`Fetching all incomplete records from Airtable...`);
 
-            let records = [];
-            let offset = '';
+        let records = [];
+        let fetchedRecords = 0;
+        let totalIncompleteRecords = 0;
+        let offset = '';
 
-            do {
-                const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
-                records = records.concat(response.data.records.map(record => ({
+        // Step 1: Calculate total number of incomplete records
+        console.log("Calculating total number of incomplete records...");
+        do {
+            const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
+            const incompleteRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
+            totalIncompleteRecords += incompleteRecords.length; // Count only incomplete records
+            offset = response.data.offset || ''; // Move to the next page of results
+        } while (offset);
+
+        console.log(`Total incomplete records to fetch: ${totalIncompleteRecords}`);
+
+        // Step 2: Fetch incomplete records and update the percentage
+        offset = ''; // Reset the offset to fetch records again
+        do {
+            const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
+            const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
+                .map(record => ({
                     id: record.id,
                     fields: record.fields,
                     descriptionOfWork: record.fields['Description of Work']
-                })));
-                offset = response.data.offset || '';
-            } while (offset);
+                }));
+            records = records.concat(pageRecords);
+            fetchedRecords += pageRecords.length;
 
-            // Filter records to only show those that are not completed
-            const incompleteRecords = records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
-            
-            toggleSearchBarVisibility(incompleteRecords); // Hide search bar if fewer than 6 records
-            displayRecordsWithFadeIn(incompleteRecords); // Display all incomplete records with fade-in effect
-        } catch (error) {
-            console.error('Error fetching all incomplete records:', error);
-        } finally {
-            hideLoadingBar();
-        }
+            // Update the loading bar based on how many records have been fetched
+            updateLoadingBar(fetchedRecords, totalIncompleteRecords);
+
+            offset = response.data.offset || ''; // Move to the next page of results
+        } while (offset);
+
+        toggleSearchBarVisibility(records); // Hide search bar if fewer than 6 records
+        displayRecordsWithFadeIn(records); // Display all incomplete records with fade-in effect
+        console.log(`Fetched ${records.length} incomplete records.`);
+        
+    } catch (error) {
+        console.error('Error fetching all incomplete records:', error);
+    } finally {
+        hideLoadingBar(); // Hide the loading bar after fetching is complete
     }
-    // Fetch records for the selected technician
-    async function fetchRecordsForTech(fieldTech) {
-        try {
-            showLoadingBar();
-            console.log(`Fetching records for ${fieldTech} from Airtable...`);
+}
 
-            const filterByFormula = `SEARCH("${fieldTech}", {static Field Technician})`;
-            let records = [];
-            let offset = '';
 
-            do {
-                const response = await axios.get(`${airtableEndpoint}?filterByFormula=${encodeURIComponent(filterByFormula)}&offset=${offset}`);
-                records = records.concat(response.data.records.map(record => ({
+
+
+    // Fetch records for a selected technician
+async function fetchRecordsForTech(fieldTech) {
+    try {
+        showLoadingBar();
+        console.log(`Fetching records for ${fieldTech} from Airtable...`);
+
+        let records = [];
+        let fetchedRecords = 0;
+        let totalIncompleteRecords = 0;
+        let offset = '';
+
+        // Step 1: Calculate total number of incomplete records for the selected technician
+        console.log(`Calculating total number of incomplete records for ${fieldTech}...`);
+        const filterByFormula = `SEARCH("${fieldTech}", {static Field Technician})`;
+        do {
+            const response = await axios.get(`${airtableEndpoint}?filterByFormula=${encodeURIComponent(filterByFormula)}&offset=${offset}`);
+            const incompleteRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
+            totalIncompleteRecords += incompleteRecords.length; // Count only incomplete records
+            offset = response.data.offset || ''; // Move to the next page of results
+        } while (offset);
+
+        console.log(`Total incomplete records for ${fieldTech}: ${totalIncompleteRecords}`);
+
+        // Step 2: Fetch records and update the percentage
+        offset = ''; // Reset the offset to fetch records again
+        do {
+            const response = await axios.get(`${airtableEndpoint}?filterByFormula=${encodeURIComponent(filterByFormula)}&offset=${offset}`);
+            const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
+                .map(record => ({
                     id: record.id,
                     fields: record.fields,
                     descriptionOfWork: record.fields['Description of Work']
-                })));
-                offset = response.data.offset || '';
-            } while (offset);
+                }));
+            records = records.concat(pageRecords);
+            fetchedRecords += pageRecords.length;
 
-            // Filter records to show only those that are not completed
-            technicianRecords = records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
-            
-            toggleSearchBarVisibility(technicianRecords); // Hide search bar if fewer than 6 records
-            displayRecordsWithFadeIn(technicianRecords); // Display the selected technician's records with fade-in
-        } catch (error) {
-            console.error('Error fetching records:', error);
-        } finally {
-            hideLoadingBar();
-        }
+            // Update the loading bar based on how many records have been fetched
+            updateLoadingBar(fetchedRecords, totalIncompleteRecords);
+
+            offset = response.data.offset || ''; // Move to the next page of results
+        } while (offset);
+
+        toggleSearchBarVisibility(records); // Hide search bar if fewer than 6 records
+        displayRecordsWithFadeIn(records); // Display the selected technician's records with fade-in effect
+        console.log(`Fetched ${records.length} incomplete records for ${fieldTech}.`);
+        
+    } catch (error) {
+        console.error(`Error fetching records for technician ${fieldTech}:`, error);
+    } finally {
+        hideLoadingBar(); // Hide the loading bar after fetching is complete
     }
+}
     // Function to display records with fade-in effect
     function displayRecordsWithFadeIn(records) {
         console.log('Displaying records...');
