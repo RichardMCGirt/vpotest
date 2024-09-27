@@ -24,15 +24,26 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Show the loading bar and hide the dropdown
-    function showLoadingBar() {
+ // Show the loading bar
+function showLoadingBar() {
+    const loadingBar = document.getElementById('loadingBar'); // Ensure loadingBar exists
+    if (loadingBar) {
         loadingBar.style.display = 'block';
+    } else {
+        console.error('Loading bar element not found.');
     }
+}
 
-    // Hide the loading bar
-    function hideLoadingBar() {
+// Hide the loading bar
+function hideLoadingBar() {
+    const loadingBar = document.getElementById('loadingBar'); // Ensure loadingBar exists
+    if (loadingBar) {
         loadingBar.style.display = 'none';
+    } else {
+        console.error('Loading bar element not found.');
     }
+}
+
 
     // Fetch unique technician names with at least one record from Airtable
     async function fetchTechniciansWithRecords() {
