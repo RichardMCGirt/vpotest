@@ -20,7 +20,7 @@ body {
     overflow-y: auto; /* Vertical scroll for large tables */
     margin: 15px 0 30px; /* Add margin at top and bottom */
     border: 2px solid #24346c;
-    background-color: #fff;
+    background-color: #828080;
     padding: 10px;
     border-radius: 8px;
     box-sizing: border-box; /* Include padding in width/height */
