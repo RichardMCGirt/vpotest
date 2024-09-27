@@ -255,8 +255,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         await populateDropdown();
     });
     
-
- // Fetch all incomplete records (for "Display All" option)
+    // Define the fetchAllIncompleteRecords function
 async function fetchAllIncompleteRecords() {
     try {
         showLoadingBar();
@@ -270,7 +269,7 @@ async function fetchAllIncompleteRecords() {
         // Step 1: Calculate total number of incomplete records
         console.log("Calculating total number of incomplete records...");
         do {
-            const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
+            const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
             const incompleteRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
             totalIncompleteRecords += incompleteRecords.length; // Count only incomplete records
             offset = response.data.offset || ''; // Move to the next page of results
@@ -281,7 +280,7 @@ async function fetchAllIncompleteRecords() {
         // Step 2: Fetch incomplete records and update the percentage
         offset = ''; // Reset the offset to fetch records again
         do {
-            const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
+            const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
             const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
                 .map(record => ({
                     id: record.id,
@@ -384,7 +383,7 @@ async function fetchRecordsForTech(fieldTech) {
                     <th>Job Name</th>
                     <th>Description of Work</th>
                     <th>Field Technician</th>
-                    <th style="width: 13%;">Confirmed Complete</th>
+                    <th style="width: 13%;">Completed</th>
                 </tr>
             </thead>
             <tbody></tbody>
