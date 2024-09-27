@@ -255,6 +255,7 @@ input[type="text"] {
     border-radius: 5px;
     transition: all 0.3s ease-in-out;
     width: 200px;
+    margin-bottom: 5px;
     box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), 2px 2px 5px rgba(0, 0, 0, 0.15);
 }
 
