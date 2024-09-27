@@ -145,9 +145,8 @@ tr:nth-child(odd) {
     }
 
 
-        #searchBarTitle {
-           font-weight: bolder;
-        }
+    
+    
 }
 
 /* Responsive design for different screen sizes */
@@ -392,7 +391,34 @@ button:hover {
   .custom-checkbox input[type="checkbox"]:checked + .checkmark::after {
     display: block;
   }
-  
+  /* Custom checkbox responsiveness */
+@media (max-width: 950px) {
+    .custom-checkbox {
+        width: 15px;
+        height: 15px;
+    }
+
+    .custom-checkbox .checkmark {
+        width: 15px;
+        height: 15px;
+    }
+
+    .table-container {
+        width: 100%; /* Full width */
+        max-width: 97vw; /* Responsive width for large screens */
+        max-height: 45vh; /* Max height of 80% viewport */
+       
+        
+        padding: 0px; /* Add padding to the container */
+        border-radius: 8px;
+        box-sizing: border-box; /* Include padding in width/height */
+        position: relative;
+    }
+
+    h3 {
+        display: none;
+    }
+}
 
 /* Custom checkbox responsiveness */
 @media (max-width: 768px) {
@@ -405,6 +431,8 @@ button:hover {
         width: 25px;
         height: 25px;
     }
+
+  
 }
 
 @media (max-width: 480px) {
