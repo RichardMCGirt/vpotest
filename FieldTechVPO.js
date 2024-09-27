@@ -371,20 +371,23 @@ async function fetchRecordsForTech(fieldTech) {
 
     function sortRecordsWithSpecialCondition(records) {
         return records.sort((a, b) => {
-            const officeA = a.fields['static Vanir Office'] || '';
-            const officeB = b.fields['static Vanir Office'] || '';
-            const techA = a.fields['static Field Technician'] || '';
-            const techB = b.fields['static Field Technician'] || '';
-
-            if (officeA === 'Greensboro' && officeB === 'Greenville, SC') return -1;
-            if (officeA === 'Greenville, SC' && officeB === 'Greensboro') return 1;
-
-            const primarySort = officeA.localeCompare(officeB);
-            if (primarySort !== 0) return primarySort;
-
-            return techA.localeCompare(techB);
+            const idA = a.fields['ID Number'] || ''; // Fetch the ID Number field from record A
+            const idB = b.fields['ID Number'] || ''; // Fetch the ID Number field from record B
+    
+            // If ID Numbers are numeric, compare numerically
+            const numA = parseInt(idA, 10);
+            const numB = parseInt(idB, 10);
+    
+            // If both IDs are valid numbers, sort numerically
+            if (!isNaN(numA) && !isNaN(numB)) {
+                return numA - numB;
+            }
+    
+            // If IDs are not numbers or not comparable numerically, fall back to lexicographical sort
+            return idA.localeCompare(idB);
         });
     }
+    
 
     function createRecordRow(record) {
         const recordRow = document.createElement('tr');
