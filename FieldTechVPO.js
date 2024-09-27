@@ -40,6 +40,36 @@ document.addEventListener("DOMContentLoaded", async function () {
             console.log("Loading bar displayed after 3 seconds");
         }, 3000); // Delay for 3 seconds
     }
+
+    // Function to handle search input and filter table rows
+function filterTable() {
+    const searchTerm = searchBar.value.toLowerCase(); // Get the search term and convert to lowercase
+    const recordsTable = document.querySelector('#records'); // Correct selector
+    const rows = recordsTable.getElementsByTagName('tr'); // Get all rows of the table
+
+    // Loop through all rows except the first one (which is the table header)
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        let rowContainsTerm = false; // Flag to check if the row contains the search term
+
+        // Loop through each cell in the row
+        const cells = row.getElementsByTagName('td');
+        for (let j = 0; j < cells.length; j++) {
+            const cellText = cells[j].textContent.toLowerCase(); // Get the cell's text and convert to lowercase
+            if (cellText.includes(searchTerm)) { // Check if cell contains the search term
+                rowContainsTerm = true; // Set flag to true if term is found
+                break; // Exit the loop since we only need one match per row
+            }
+        }
+
+        // Show or hide the row based on whether it contains the search term
+        row.style.display = rowContainsTerm ? '' : 'none';
+    }
+}
+
+// Add an event listener for the search bar input event
+searchBar.addEventListener('input', filterTable);
+
     
     // Hide the loading bar immediately when loading is complete
     function hideLoadingBar() {
@@ -68,67 +98,75 @@ document.addEventListener("DOMContentLoaded", async function () {
         console.log(`Loading bar updated: ${percentage}% (${current} of ${total} records fetched).`);
     }
     
-
-// Fetch records from Airtable with percentage-based loading
-async function fetchAndDisplayRecords() {
-    const recordsTableBody = document.querySelector('#recordsTable tbody');
-    recordsTableBody.innerHTML = ''; // Clear any existing records
+    async function fetchAndDisplayRecords() {
+        const recordsTableBody = document.querySelector('#recordsTable tbody');
+        recordsTableBody.innerHTML = ''; // Clear any existing records
     
-    try {
-        console.log("Starting to fetch records from Airtable...");
-        showLoadingBar();
-        
-        let totalRecords = 0;
-        let fetchedRecords = 0;
-        let records = [];
-        let offset = '';
-
-        // First, get the total number of records to calculate the percentage
-        const initialResponse = await axios.get(`${airtableEndpoint}?pageSize=1`);
-        totalRecords = initialResponse.data.records.length; // Replace with actual total count logic if available
-        console.log(`Total records to fetch: ${totalRecords}`);
-
-        // Fetch records in pages (or batches)
-        do {
-            console.log(`Fetching batch of records, current offset: ${offset}`);
-            const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
-            const pageRecords = response.data.records;
-            records = records.concat(pageRecords);
-            fetchedRecords += pageRecords.length;
-
-            // Update loading bar
-            updateLoadingBar(fetchedRecords, totalRecords);
-
-            offset = response.data.offset || ''; // Move to the next page of results
-            console.log(`Fetched ${fetchedRecords} records so far.`);
-
-        } while (offset);
-
-        // Hide the loading bar once fetching is complete
-        hideLoadingBar();
-        console.log("Finished fetching all records.");
-
-        // Populate the table with the fetched records
-        console.log("Populating the table with fetched records...");
-        records.forEach(record => {
-            const recordRow = document.createElement('tr');
-            recordRow.innerHTML = `
-                <td>${record.fields['ID Number'] || ''}</td>
-                <td>${record.fields['static Vanir Office'] || ''}</td>
-                <td>${record.fields['Job Name'] || ''}</td>
-                <td>${record.fields['Description of Work'] || ''}</td>
-                <td>${record.fields['static Field Technician'] || ''}</td>
-                <td>${record.fields['Field Tech Confirmed Job Complete'] ? 'Yes' : 'No'}</td>
-            `;
-            recordsTableBody.appendChild(recordRow);
-        });
-
-        console.log(`Total number of records displayed: ${records.length}`);
-    } catch (error) {
-        console.error('Error fetching records:', error);
-        hideLoadingBar(); // Hide the loading bar in case of error
+        try {
+            console.log("Starting to fetch records from Airtable...");
+            showLoadingBar();
+    
+            let totalRecords = 0;
+            let fetchedRecords = 0;
+            let records = [];
+            let offset = '';
+    
+            // First pass: Fetch all records to get the total count
+            console.log("Calculating total number of records...");
+            do {
+                const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
+                const pageRecords = response.data.records;
+                records = records.concat(pageRecords);
+                totalRecords += pageRecords.length; // Count the total records
+                offset = response.data.offset || ''; // Move to the next page of results
+            } while (offset);
+    
+            console.log(`Total records to fetch: ${totalRecords}`);
+    
+            // Second pass: Fetch records and update the percentage
+            offset = ''; // Reset offset to start fetching records again
+            fetchedRecords = 0; // Reset fetched records count
+            records = []; // Clear previously fetched records
+    
+            do {
+                const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
+                const pageRecords = response.data.records;
+                records = records.concat(pageRecords);
+                fetchedRecords += pageRecords.length;
+    
+                // Update loading bar
+                updateLoadingBar(fetchedRecords, totalRecords);
+    
+                offset = response.data.offset || ''; // Move to the next page of results
+                console.log(`Fetched ${fetchedRecords} records so far.`);
+            } while (offset);
+    
+            // Hide the loading bar once fetching is complete
+            hideLoadingBar();
+            console.log("Finished fetching all records.");
+    
+            // Populate the table with the fetched records
+            console.log("Populating the table with fetched records...");
+            records.forEach(record => {
+                const recordRow = document.createElement('tr');
+                recordRow.innerHTML = `
+                    <td>${record.fields['ID Number'] || ''}</td>
+                    <td>${record.fields['static Vanir Office'] || ''}</td>
+                    <td>${record.fields['Job Name'] || ''}</td>
+                    <td>${record.fields['Description of Work'] || ''}</td>
+                    <td>${record.fields['static Field Technician'] || ''}</td>
+                    <td>${record.fields['Field Tech Confirmed Job Complete'] ? 'Yes' : 'No'}</td>
+                `;
+                recordsTableBody.appendChild(recordRow);
+            });
+    
+            console.log(`Total number of records displayed: ${records.length}`);
+        } catch (error) {
+            console.error('Error fetching records:', error);
+            hideLoadingBar(); // Hide the loading bar in case of error
+        }
     }
-}
+    
 
 // Trigger fetching when the page loads or on some event
 document.addEventListener("DOMContentLoaded", async function () {
