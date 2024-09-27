@@ -25,6 +25,43 @@ body {
     box-sizing: border-box;
 }
 
+/* Spinner styling */
+.spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1.5s linear infinite;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Style for the loading bar */
+#loadingBar {
+    display: none;
+    width: 100%;
+    height: 4px;
+    background-color: #3498db;
+    animation: loading 2s infinite;
+    position: fixed;
+    top: 0;
+}
+
+@keyframes loading {
+    0% { width: 0%; }
+    100% { width: 100%; }
+}
+
+
 /* Style for the loading bar */
 #loadingBar {
     display: none; /* Initially hidden */
@@ -291,6 +328,7 @@ tr:nth-child(odd) {
         overflow: hidden; /* Prevent body scroll */
         color: #333;
         margin-bottom: 15%;
+        margin-top: 60px;
     }
 
     h2 {
@@ -298,7 +336,7 @@ tr:nth-child(odd) {
     }
 
     .table-container {
-        max-height: calc(100vh - 90px); /* Set max height, leaving 60px for other content */
+        max-height: calc(100vh - 150px); /* Set max height, leaving 60px for other content */
         overflow-y: auto; /* Enable vertical scrolling */
         margin-top: 10px; /* Adjust top margin */
         padding-bottom: 60px; /* Ensure some bottom padding */
