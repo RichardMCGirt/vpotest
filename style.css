@@ -15,7 +15,7 @@ body {
 .table-container {
     width: 100%; /* Full width */
     max-width: 95vw; /* Responsive width for large screens */
-    max-height: 70vh; /* Max height of 70% viewport */
+    max-height: 80vh; /* Max height of 70% viewport */
     overflow-x: auto; /* Horizontal scroll if table is too wide */
     overflow-y: auto; /* Vertical scroll for large tables */
     margin: 15px 0 30px; /* Add margin at top and bottom */
@@ -69,7 +69,7 @@ tr:nth-child(odd) {
 /* Portrait mode */
 @media screen and (orientation: portrait) {
     .table-container {
-        max-height: 80vh; /* Use more vertical space */
+        max-height: 60vh; /* Use more vertical space */
         margin-bottom: 50px; /* Extra bottom margin */
     }
 
@@ -86,7 +86,6 @@ tr:nth-child(odd) {
 /* Landscape mode */
 @media screen and (orientation: landscape) {
     .table-container {
-        max-height: 60vh; /* Less height for landscape */
         margin-bottom: 30px; /* Ensure margin at the bottom */
     }
 
