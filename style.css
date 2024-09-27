@@ -98,11 +98,11 @@ tr:nth-child(odd) {
         max-width: 200px;
     }
 
-    @media screen and (orientation: landscape) {
+
         #searchBarTitle {
             display: none;
         }
-    }
+}
 
 /* Responsive design for different screen sizes */
 @media (max-width: 768px) {
