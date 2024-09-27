@@ -46,8 +46,35 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    
+    // Fetch unique technician names with at least one incomplete record from Airtable
+    async function fetchTechniciansWithRecords() {
+        try {
+            let techniciansWithRecords = new Set(); // Use a Set to ensure uniqueness
+            let offset = '';
 
+            // Fetch all records
+            do {
+                const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
+                const records = response.data.records;
+
+                // Process each record and add the technician name if they have a record
+                records.forEach(record => {
+                    const techName = record.fields['static Field Technician'];
+                    const isJobComplete = record.fields['Field Tech Confirmed Job Complete'];
+                    if (techName && !isJobComplete) {  // Only include technicians with incomplete jobs
+                        techniciansWithRecords.add(techName); // Add technician name to the Set
+                    }
+                });
+
+                offset = response.data.offset || ''; // Move to the next page of results
+            } while (offset);
+
+            return Array.from(techniciansWithRecords).sort(); // Convert the Set to an Array and sort alphabetically
+        } catch (error) {
+            console.error('Error fetching technicians:', error);
+            return [];
+        }
+    }
 
     // Populate dropdown with technician names who have records
     async function populateDropdown() {
@@ -96,7 +123,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             techDropdown.value = previouslySelectedTech;
         }
     }
-
 
     // Fetch all incomplete records (for "Display All" option)
     async function fetchAllIncompleteRecords() {
