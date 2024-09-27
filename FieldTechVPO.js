@@ -562,10 +562,14 @@ async function fetchAllIncompleteRecords() {
             // Dynamically update the UI instead of reloading
             updateCheckboxUI(recordId, isChecked);
     
+            // Add page refresh after successful submission
+            location.reload();
+    
         } catch (error) {
             console.error('Error updating record:', error);
         }
     }
+    
     
     function updateCheckboxUI(recordId, isChecked) {
         // Find the checkbox element using the record ID
