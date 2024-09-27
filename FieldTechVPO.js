@@ -499,42 +499,44 @@ async function fetchAllIncompleteRecords() {
     
     // Call the function when the dropdown changes
     techDropdown.addEventListener('change', hideFieldTechnicianColumnIfMatches);
+    let currentCheckbox = null; // Declare at a higher scope
+    let currentRecordId = null;  // Declare at a higher scope
     
-// Function to handle checkbox click event
-function handleCheckboxClick(event) {
-    const currentCheckbox = event.target;
-    const currentRecordId = currentCheckbox.getAttribute('data-record-id');
-    const isChecked = currentCheckbox.checked;
-    const initialChecked = currentCheckbox.getAttribute('data-initial-checked') === 'true'; // Use true/false instead of 'checked'
-
-    if (!isChecked) {
-        // Checkbox was unchecked: immediately submit the update without showing the modal
-        console.log('Checkbox unchecked, submitting update immediately...');
-        submitUpdate(currentRecordId, false); // Uncheck action, no modal
-        modal.style.display = 'none'; // Hide the modal when unchecked
-    } else if (!initialChecked && isChecked) {
-        // Checkbox was initially unchecked and is now checked: Show the modal for confirmation
-        console.log('Checkbox checked, showing modal for confirmation...');
-        modal.style.display = 'block'; // Show the modal when checked
+    // Function to handle checkbox click event
+    function handleCheckboxClick(event) {
+        currentCheckbox = event.target;  // Assign current checkbox globally
+        currentRecordId = currentCheckbox.getAttribute('data-record-id');
+        const isChecked = currentCheckbox.checked;
+        const initialChecked = currentCheckbox.getAttribute('data-initial-checked') === 'true';
+    
+        if (!isChecked) {
+            // Checkbox was unchecked: immediately submit the update without showing the modal
+            console.log('Checkbox unchecked, submitting update immediately...');
+            submitUpdate(currentRecordId, false); // Uncheck action, no modal
+            modal.style.display = 'none'; // Hide the modal when unchecked
+        } else if (!initialChecked && isChecked) {
+            // Checkbox was initially unchecked and is now checked: Show the modal for confirmation
+            console.log('Checkbox checked, showing modal for confirmation...');
+            modal.style.display = 'block'; // Show the modal when checked
+        }
+    
+        // Update the checkbox's 'data-initial-checked' attribute to its current state after interaction
+        currentCheckbox.setAttribute('data-initial-checked', isChecked);
     }
-
-    // Update the checkbox's 'data-initial-checked' attribute to its current state after interaction
-    currentCheckbox.setAttribute('data-initial-checked', isChecked);
-}
-
-
-
     
-
+    // Event listeners for modal buttons
     yesButton.addEventListener('click', () => {
-        submitUpdate(currentRecordId, true);
+        submitUpdate(currentRecordId, true);  // Use the globally declared currentRecordId
         modal.style.display = 'none';
     });
-
+    
     noButton.addEventListener('click', () => {
-        currentCheckbox.checked = false;
+        if (currentCheckbox) {
+            currentCheckbox.checked = false;  // Uncheck the checkbox if "No" is clicked
+        }
         modal.style.display = 'none';
     });
+    
 
     async function submitUpdate(recordId, isChecked) {
         console.log(`Submitting update for record ID ${recordId}...`);
