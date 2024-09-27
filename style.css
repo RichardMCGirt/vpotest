@@ -168,7 +168,7 @@ button:hover {
     overflow-x: auto; /* Enable horizontal scrolling if table is too wide */
     margin-top: 15px; /* Optional: Add some margin to space the table from the other content */
     border: #24346c;
-    margin-bottom: 45px;
+    margin-bottom: 80px;
 }
 
 
@@ -279,7 +279,7 @@ tr:nth-child(odd) {
         overflow-x: auto; /* Enable horizontal scrolling */
         max-height: 75vh; /* Ensure the table doesn't exceed 60% of the viewport height */
         margin-top: 10px;  /* Adjust top margin */
-        margin-bottom: 10px; /* Adjust bottom margin */
+        margin-bottom: 75px; /* Adjust bottom margin */
     }
 
     table {
@@ -324,7 +324,7 @@ tr:nth-child(odd) {
         overflow: hidden; /* Prevent body scroll */
         color: #333;
         margin-bottom: 15%;
-        margin-top: 20px;
+        margin-top: 75px;
     }
 
     h2 {

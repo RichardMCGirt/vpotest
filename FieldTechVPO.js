@@ -24,28 +24,25 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
- // Show the loading bar
-function showLoadingBar() {
-    const loadingBar = document.getElementById('loadingBar'); // Ensure loadingBar exists
-    if (loadingBar) {
-        loadingBar.style.display = 'block';
-    } else {
-        console.error('Loading bar element not found.');
+    // Show the loading bar
+    function showLoadingBar() {
+        if (loadingBar) {
+            loadingBar.style.display = 'block';
+        } else {
+            console.error('Loading bar element not found.');
+        }
     }
-}
 
-// Hide the loading bar
-function hideLoadingBar() {
-    const loadingBar = document.getElementById('loadingBar'); // Ensure loadingBar exists
-    if (loadingBar) {
-        loadingBar.style.display = 'none';
-    } else {
-        console.error('Loading bar element not found.');
+    // Hide the loading bar
+    function hideLoadingBar() {
+        if (loadingBar) {
+            loadingBar.style.display = 'none';
+        } else {
+            console.error('Loading bar element not found.');
+        }
     }
-}
 
-
-    // Fetch unique technician names with at least one record from Airtable
+    // Fetch unique technician names with at least one incomplete record from Airtable
     async function fetchTechniciansWithRecords() {
         try {
             let techniciansWithRecords = new Set(); // Use a Set to ensure uniqueness
