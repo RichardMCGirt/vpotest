@@ -168,53 +168,55 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Populate dropdown with technician names who have records
     async function populateDropdown() {
-        // Check if cached technicians exist and load them first
         const cachedTechnicians = JSON.parse(localStorage.getItem('technicians'));
-        
-        if (cachedTechnicians) {
-            // Populate dropdown from cache immediately
+    
+        // If cached technicians exist, load them into the dropdown first
+        if (cachedTechnicians && cachedTechnicians.length > 0) {
             populateDropdownFromCache(cachedTechnicians);
             console.log('Dropdown populated from cache');
         }
     
         // Check cache expiration or if no cache is available
-        if (!lastFetch || currentTime - lastFetch > cacheTime) {
-            // Fetch fresh technician names from Airtable asynchronously in the background
-            setTimeout(async () => {
-                const technicians = await fetchTechniciansWithRecords();
-                localStorage.setItem('technicians', JSON.stringify(technicians));
-                localStorage.setItem('lastTechFetchTime', currentTime.toString());
+        if (!cachedTechnicians || !lastFetch || currentTime - lastFetch > cacheTime) {
+            // Immediately fetch fresh technician names from Airtable if the cache is empty or expired
+            const technicians = await fetchTechniciansWithRecords();
+            localStorage.setItem('technicians', JSON.stringify(technicians));
+            localStorage.setItem('lastTechFetchTime', currentTime.toString());
     
-                // Update dropdown after fetching new data in the background
-                populateDropdownFromCache(technicians);
-                console.log('Dropdown updated with fresh data');
-            }, 500);  // Delay fetching to allow for faster perceived load
+            // Update dropdown after fetching new data
+            populateDropdownFromCache(technicians);
+            console.log('Dropdown updated with fresh data');
         }
     }
     
-
     function populateDropdownFromCache(technicians) {
         const previouslySelectedTech = localStorage.getItem('fieldTech') || '';
-
+    
         techDropdown.innerHTML = `
             <option value="">Select a Technician</option>
             <option value="all">Display All</option>
         `;
-
+    
         technicians.forEach(tech => {
             const option = document.createElement('option');
             option.value = tech;
             option.innerText = tech;
             techDropdown.appendChild(option);
         });
-
+    
         // Set the dropdown to the previously selected technician
         if (previouslySelectedTech) {
             techDropdown.value = previouslySelectedTech;
         }
     }
+    
+    // Call populateDropdown immediately when DOM is ready
+    document.addEventListener("DOMContentLoaded", async function () {
+        console.log("DOM fully loaded, populating dropdown...");
+        await populateDropdown();
+    });
+    
 
  // Fetch all incomplete records (for "Display All" option)
 async function fetchAllIncompleteRecords() {
