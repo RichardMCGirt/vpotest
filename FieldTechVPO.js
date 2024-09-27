@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const displayNameElement = document.getElementById('displayName');
     const techDropdown = document.getElementById('techDropdown'); // Get the dropdown element
     const searchBar = document.getElementById('searchBar'); // Reference to the search bar
+    const loadingBar = document.getElementById('loadingBar'); // Reference to the loading bar element
     const airtableApiKey = 'pata9Iv7DANqtJrgO.b308b33cd0f323601f3fb580aac0d333ca1629dd26c5ebe2e2b9f18143ccaa8e';
     const airtableBaseId = 'appQDdkj6ydqUaUkE';
     const airtableTableName = 'tblO72Aw6qplOEAhR';
@@ -13,6 +14,25 @@ document.addEventListener("DOMContentLoaded", async function () {
     axios.defaults.headers.common['Authorization'] = `Bearer ${airtableApiKey}`;
 
     let technicianRecords = []; // Store records fetched for the logged-in technician
+
+    // Function to hide search bar if less than 6 records
+    function toggleSearchBarVisibility(records) {
+        if (records.length < 6) {
+            searchBar.style.display = 'none';  // Hide the search bar if there are less than 6 records
+        } else {
+            searchBar.style.display = 'block';  // Show the search bar if there are 6 or more records
+        }
+    }
+
+    // Show the loading bar and hide the dropdown
+    function showLoadingBar() {
+        loadingBar.style.display = 'block';
+    }
+
+    // Hide the loading bar
+    function hideLoadingBar() {
+        loadingBar.style.display = 'none';
+    }
 
     // Fetch unique technician names with at least one record from Airtable
     async function fetchTechniciansWithRecords() {
@@ -77,7 +97,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Fetch all incomplete records (for "Display All" option)
     async function fetchAllIncompleteRecords() {
         try {
-            showLoadingMessage();
+            showLoadingBar();
             console.log(`Fetching all incomplete records from Airtable...`);
 
             let records = [];
@@ -97,18 +117,18 @@ document.addEventListener("DOMContentLoaded", async function () {
             const incompleteRecords = records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
             
             toggleSearchBarVisibility(incompleteRecords); // Hide search bar if fewer than 6 records
-            displayRecords(incompleteRecords); // Display all incomplete records
+            displayRecordsWithFadeIn(incompleteRecords); // Display all incomplete records with fade-in effect
         } catch (error) {
             console.error('Error fetching all incomplete records:', error);
         } finally {
-            hideLoadingMessage();
+            hideLoadingBar();
         }
     }
 
     // Fetch records for the selected technician
     async function fetchRecordsForTech(fieldTech) {
         try {
-            showLoadingMessage();
+            showLoadingBar();
             console.log(`Fetching records for ${fieldTech} from Airtable...`);
 
             const filterByFormula = `SEARCH("${fieldTech}", {static Field Technician})`;
@@ -129,24 +149,16 @@ document.addEventListener("DOMContentLoaded", async function () {
             technicianRecords = records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
             
             toggleSearchBarVisibility(technicianRecords); // Hide search bar if fewer than 6 records
-            displayRecords(technicianRecords); // Display the selected technician's records
+            displayRecordsWithFadeIn(technicianRecords); // Display the selected technician's records with fade-in
         } catch (error) {
             console.error('Error fetching records:', error);
         } finally {
-            hideLoadingMessage();
+            hideLoadingBar();
         }
     }
 
-    function showLoadingMessage() {
-        document.getElementById('loadingMessage').innerText = 'Loading records...';
-        document.getElementById('loadingMessage').style.display = 'block';
-    }
-
-    function hideLoadingMessage() {
-        document.getElementById('loadingMessage').style.display = 'none';
-    }
-
-    function displayRecords(records) {
+    // Function to display records with fade-in effect
+    function displayRecordsWithFadeIn(records) {
         console.log('Displaying records...');
         const recordsContainer = document.getElementById('records');
         recordsContainer.innerHTML = '';
@@ -174,8 +186,16 @@ document.addEventListener("DOMContentLoaded", async function () {
         recordsContainer.innerHTML = tableHeader;
         const tableBody = recordsContainer.querySelector('tbody');
 
-        records.forEach(record => {
+        // Use setTimeout to create a fade-in effect for each record
+        records.forEach((record, index) => {
             const recordRow = createRecordRow(record);
+            recordRow.style.opacity = 0; // Initially set opacity to 0 for fade-in effect
+
+            setTimeout(() => {
+                recordRow.style.opacity = 1; // Fade-in effect
+                recordRow.style.transition = 'opacity 0.5s'; // Apply CSS transition for smooth fade-in
+            }, index * 100); // Delay each row by 100ms
+
             tableBody.appendChild(recordRow);
         });
 
@@ -198,15 +218,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             return techA.localeCompare(techB);
         });
     }
-    function toggleSearchBarVisibility(records) {
-        const searchBar = document.getElementById('searchBar'); // Get reference to the search bar element
-        if (records.length < 6) {
-            searchBar.style.display = 'none';  // Hide the search bar if there are less than 6 records
-        } else {
-            searchBar.style.display = 'block';  // Show the search bar if there are 6 or more records
-        }
-    }
-    
 
     function createRecordRow(record) {
         const recordRow = document.createElement('tr');
