@@ -136,7 +136,7 @@ tr:nth-child(odd) {
         width: 95%;
         padding: 5px;
         margin-top: 10px;
-        max-height: 85vh; /* Ensure it uses most of the available height */
+        max-height: 55vh; /* Ensure it uses most of the available height */
     }
 }
 
@@ -239,7 +239,7 @@ tr:nth-child(odd) {
     background-color: #3498db;
     animation: loading 2s infinite;
     position: fixed;
-    top: 0;
+    bottom: 0;
 }
 
 @keyframes loading {
