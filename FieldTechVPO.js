@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const storedTech = localStorage.getItem('fieldTech');
     const displayNameElement = document.getElementById('displayName');
     const techDropdown = document.getElementById('techDropdown'); // Get the dropdown element
-
+    const searchBar = document.getElementById('searchBar'); // Reference to the search bar
     const airtableApiKey = 'pata9Iv7DANqtJrgO.b308b33cd0f323601f3fb580aac0d333ca1629dd26c5ebe2e2b9f18143ccaa8e';
     const airtableBaseId = 'appQDdkj6ydqUaUkE';
     const airtableTableName = 'tblO72Aw6qplOEAhR';
@@ -14,36 +14,39 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     let technicianRecords = []; // Store records fetched for the logged-in technician
 
-    // Fetch unique technician names from Airtable
-    async function fetchUniqueTechnicians() {
+    // Fetch unique technician names with at least one record from Airtable
+    async function fetchTechniciansWithRecords() {
         try {
-            let technicians = new Set(); // Use a Set to ensure uniqueness
+            let techniciansWithRecords = new Set(); // Use a Set to ensure uniqueness
             let offset = '';
 
+            // Fetch all records
             do {
                 const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
                 const records = response.data.records;
 
+                // Process each record and add the technician name if they have a record
                 records.forEach(record => {
                     const techName = record.fields['static Field Technician'];
-                    if (techName) {
-                        technicians.add(techName); // Add technician name to the Set
+                    const isJobComplete = record.fields['Field Tech Confirmed Job Complete'];
+                    if (techName && !isJobComplete) {  // Only include technicians with incomplete jobs
+                        techniciansWithRecords.add(techName); // Add technician name to the Set
                     }
                 });
 
-                offset = response.data.offset || '';
+                offset = response.data.offset || ''; // Move to the next page of results
             } while (offset);
 
-            return Array.from(technicians); // Convert the Set to an Array
+            return Array.from(techniciansWithRecords).sort(); // Convert the Set to an Array and sort alphabetically
         } catch (error) {
             console.error('Error fetching technicians:', error);
             return [];
         }
     }
 
-    // Populate dropdown with technician names
+    // Populate dropdown with technician names who have records
     async function populateDropdown() {
-        const technicians = await fetchUniqueTechnicians();
+        const technicians = await fetchTechniciansWithRecords();
 
         // Clear the dropdown
         techDropdown.innerHTML = `
@@ -51,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             <option value="all">Display All</option>
         `;
 
-        // Populate the dropdown with unique technician names
+        // Populate the dropdown with technicians who have records
         technicians.forEach(tech => {
             const option = document.createElement('option');
             option.value = tech;
@@ -59,8 +62,11 @@ document.addEventListener("DOMContentLoaded", async function () {
             techDropdown.appendChild(option);
         });
 
-        // If technician name is stored, set it as selected in the dropdown
-        if (storedTech && storedTech !== "all") {
+        // Check if a technician is already stored in localStorage
+        if (!storedTech) {
+            alert('Please select your name from the dropdown.');
+            techDropdown.focus(); // Focus on the dropdown for selection
+        } else if (storedTech !== "all") {
             displayNameElement.innerText = `Logged in as: ${storedTech}`;
             techDropdown.value = storedTech;
         } else if (storedTech === "all") {
@@ -89,6 +95,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
             // Filter records to only show those that are not completed
             const incompleteRecords = records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
+            
+            toggleSearchBarVisibility(incompleteRecords); // Hide search bar if fewer than 6 records
             displayRecords(incompleteRecords); // Display all incomplete records
         } catch (error) {
             console.error('Error fetching all incomplete records:', error);
@@ -119,6 +127,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
             // Filter records to show only those that are not completed
             technicianRecords = records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
+            
+            toggleSearchBarVisibility(technicianRecords); // Hide search bar if fewer than 6 records
             displayRecords(technicianRecords); // Display the selected technician's records
         } catch (error) {
             console.error('Error fetching records:', error);
@@ -188,6 +198,15 @@ document.addEventListener("DOMContentLoaded", async function () {
             return techA.localeCompare(techB);
         });
     }
+    function toggleSearchBarVisibility(records) {
+        const searchBar = document.getElementById('searchBar'); // Get reference to the search bar element
+        if (records.length < 6) {
+            searchBar.style.display = 'none';  // Hide the search bar if there are less than 6 records
+        } else {
+            searchBar.style.display = 'block';  // Show the search bar if there are 6 or more records
+        }
+    }
+    
 
     function createRecordRow(record) {
         const recordRow = document.createElement('tr');
