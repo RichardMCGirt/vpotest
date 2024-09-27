@@ -430,9 +430,7 @@ button:hover {
         position: relative;
     }
 
-    h3 {
-        display: none;
-    }
+
 }
 
 @media (max-height: 950px) {
@@ -486,9 +484,7 @@ button:hover {
         padding: 0; /* No padding on the table itself */
     }
 
-    h3 {
-        display: none;
-    }
+  
 }
 
 /* Custom checkbox responsiveness */
