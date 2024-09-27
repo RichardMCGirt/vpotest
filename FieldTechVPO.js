@@ -15,6 +15,10 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     let technicianRecords = []; // Store records fetched for the logged-in technician
 
+    const cacheTime = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+    const lastFetch = localStorage.getItem('lastTechFetchTime');
+    const currentTime = new Date().getTime();
+
     // Function to hide search bar if less than 6 records
     function toggleSearchBarVisibility(records) {
         if (records.length < 6) {
@@ -43,63 +47,95 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     // Fetch unique technician names with at least one incomplete record from Airtable
-    async function fetchTechniciansWithRecords() {
+    async function fetchTechniciansAndRecords() {
         try {
-            let techniciansWithRecords = new Set(); // Use a Set to ensure uniqueness
+            let techniciansWithRecords = new Set(); // To store unique technician names
+            let records = []; // Store all fetched records for table
             let offset = '';
 
-            // Fetch all records
+            // Fetch records progressively
             do {
-                const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
-                const records = response.data.records;
+                const response = await axios.get(`${airtableEndpoint}?fields[]=static Field Technician&fields[]=Field Tech Confirmed Job Complete&fields[]=Description of Work&offset=${offset}`);
+                const recordsBatch = response.data.records;
 
-                // Process each record and add the technician name if they have a record
-                records.forEach(record => {
+                // Process each record and update dropdown and table incrementally
+                recordsBatch.forEach(record => {
                     const techName = record.fields['static Field Technician'];
                     const isJobComplete = record.fields['Field Tech Confirmed Job Complete'];
-                    if (techName && !isJobComplete) {  // Only include technicians with incomplete jobs
-                        techniciansWithRecords.add(techName); // Add technician name to the Set
+                    
+                    // If technician name exists and job is incomplete, add to dropdown
+                    if (techName && !isJobComplete) {
+                        techniciansWithRecords.add(techName);
+                    }
+
+                    // Add to records if incomplete
+                    if (!isJobComplete) {
+                        records.push({
+                            id: record.id,
+                            fields: record.fields,
+                            descriptionOfWork: record.fields['Description of Work'],
+                        });
                     }
                 });
 
+                // Update dropdown progressively after each batch
+                populateDropdownFromCache(Array.from(techniciansWithRecords));
+
+                // Update table with new records progressively
+                displayRecordsWithFadeIn(records);
+
                 offset = response.data.offset || ''; // Move to the next page of results
+
             } while (offset);
 
-            return Array.from(techniciansWithRecords).sort(); // Convert the Set to an Array and sort alphabetically
+            return { technicians: Array.from(techniciansWithRecords), records };
         } catch (error) {
-            console.error('Error fetching technicians:', error);
-            return [];
+            console.error('Error fetching technicians and records:', error);
+            return { technicians: [], records: [] };
         }
     }
 
+
     // Populate dropdown with technician names who have records
     async function populateDropdown() {
-        const technicians = await fetchTechniciansWithRecords();
+        // Check if cached technicians exist and load them first
+        const cachedTechnicians = JSON.parse(localStorage.getItem('technicians'));
+        
+        if (cachedTechnicians) {
+            // Populate dropdown from cache immediately
+            populateDropdownFromCache(cachedTechnicians);
+            console.log('Dropdown populated from cache');
+        }
+    
+        // Check cache expiration or if no cache is available
+        if (!lastFetch || currentTime - lastFetch > cacheTime) {
+            // Fetch fresh technician names from Airtable asynchronously in the background
+            setTimeout(async () => {
+                const technicians = await fetchTechniciansWithRecords();
+                localStorage.setItem('technicians', JSON.stringify(technicians));
+                localStorage.setItem('lastTechFetchTime', currentTime.toString());
+    
+                // Update dropdown after fetching new data in the background
+                populateDropdownFromCache(technicians);
+                console.log('Dropdown updated with fresh data');
+            }, 500);  // Delay fetching to allow for faster perceived load
+        }
+    }
+    
 
-        // Clear the dropdown
+     // Populate dropdown progressively with technician names
+     function populateDropdownFromCache(technicians) {
         techDropdown.innerHTML = `
             <option value="">Select a Technician</option>
             <option value="all">Display All</option>
         `;
 
-        // Populate the dropdown with technicians who have records
         technicians.forEach(tech => {
             const option = document.createElement('option');
             option.value = tech;
             option.innerText = tech;
             techDropdown.appendChild(option);
         });
-
-        // Check if a technician is already stored in localStorage
-        if (!storedTech) {
-            alert('Please select your name from the dropdown.');
-            techDropdown.focus(); // Focus on the dropdown for selection
-        } else if (storedTech !== "all") {
-            displayNameElement.innerText = `Logged in as: ${storedTech}`;
-            techDropdown.value = storedTech;
-        } else if (storedTech === "all") {
-            techDropdown.value = "all"; // Select "Display All" if it was previously chosen
-        }
     }
 
     // Fetch all incomplete records (for "Display All" option)
@@ -132,7 +168,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             hideLoadingBar();
         }
     }
-
     // Fetch records for the selected technician
     async function fetchRecordsForTech(fieldTech) {
         try {
@@ -164,7 +199,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             hideLoadingBar();
         }
     }
-
     // Function to display records with fade-in effect
     function displayRecordsWithFadeIn(records) {
         console.log('Displaying records...');
@@ -209,6 +243,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         console.log(`Total number of entries displayed: ${records.length}`);
     }
+
 
     function sortRecordsWithSpecialCondition(records) {
         return records.sort((a, b) => {
@@ -304,8 +339,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Handle dropdown change event
-    techDropdown.addEventListener('change', () => {
+     // Handle dropdown change event
+     techDropdown.addEventListener('change', () => {
         const selectedTech = techDropdown.value;
         if (selectedTech === "all") {
             fetchAllIncompleteRecords(); // Fetch and display all incomplete records
@@ -315,7 +350,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             fetchRecordsForTech(selectedTech); // Re-fetch records for the selected technician
         }
     });
-
     // Populate dropdown with unique technician names on page load
     populateDropdown();
 
