@@ -136,7 +136,7 @@ tr:nth-child(odd) {
         width: 95%;
         padding: 5px;
         margin-top: 10px;
-        max-height: 55vh; /* Ensure it uses most of the available height */
+        max-height: 45vh; /* Ensure it uses most of the available height */
     }
 }
 
