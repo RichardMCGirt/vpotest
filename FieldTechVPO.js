@@ -462,23 +462,29 @@ async function fetchRecordsForTech(fieldTech) {
     const noButton = document.getElementById('noButton');
 
 
- // Function to handle checkbox click event
- function handleCheckboxClick(event) {
-    currentCheckbox = event.target;
-    currentRecordId = currentCheckbox.getAttribute('data-record-id');
+// Function to handle checkbox click event
+function handleCheckboxClick(event) {
+    const currentCheckbox = event.target;
+    const currentRecordId = currentCheckbox.getAttribute('data-record-id');
     const isChecked = currentCheckbox.checked;
-    const initialChecked = currentCheckbox.getAttribute('data-initial-checked') === 'checked';
+    const initialChecked = currentCheckbox.getAttribute('data-initial-checked') === 'true'; // Use true/false instead of 'checked'
 
     if (!isChecked) {
-        // Checkbox is unchecked: immediately submit the update without showing the modal or alert
+        // Checkbox was unchecked: immediately submit the update without showing the modal
         console.log('Checkbox unchecked, submitting update immediately...');
-        submitUpdate(currentRecordId, false); // Uncheck action, no modal, no alert
+        submitUpdate(currentRecordId, false); // Uncheck action, no modal
+        modal.style.display = 'none'; // Hide the modal when unchecked
     } else if (!initialChecked && isChecked) {
-        // Checkbox is checked: show the modal for confirmation
+        // Checkbox was initially unchecked and is now checked: Show the modal for confirmation
         console.log('Checkbox checked, showing modal for confirmation...');
-        modal.style.display = 'block'; // Show the modal
+        modal.style.display = 'block'; // Show the modal when checked
     }
+
+    // Update the checkbox's 'data-initial-checked' attribute to its current state after interaction
+    currentCheckbox.setAttribute('data-initial-checked', isChecked);
 }
+
+
 
     
 
@@ -496,6 +502,7 @@ async function fetchRecordsForTech(fieldTech) {
         console.log(`Submitting update for record ID ${recordId}...`);
     
         try {
+            // Send the update to Airtable
             await axios.patch(`${airtableEndpoint}/${recordId}`, {
                 fields: {
                     'Field Tech Confirmed Job Complete': isChecked,
@@ -507,14 +514,33 @@ async function fetchRecordsForTech(fieldTech) {
                 // Only show alert if the job is confirmed complete (checked)
                 console.log(`Record ID ${recordId} marked as complete.`);
                 alert(`Record ID ${recordId} updated successfully.`);
+            } else {
+                // Log for uncheck, no alert needed
+                console.log(`Record ID ${recordId} marked as incomplete.`);
             }
     
-            // Reload the page to reflect changes without alert on uncheck
-            location.reload();
+            // Dynamically update the UI instead of reloading
+            updateCheckboxUI(recordId, isChecked);
     
         } catch (error) {
             console.error('Error updating record:', error);
-            alert(`Error updating record ID ${recordId}. Please try again.`);
+        }
+    }
+    
+    function updateCheckboxUI(recordId, isChecked) {
+        // Find the checkbox element using the record ID
+        const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);
+    
+        if (checkbox) {
+            // Update the checkbox state
+            checkbox.checked = isChecked;
+    
+            // Optionally update any other UI elements (e.g., change labels or text)
+            const row = checkbox.closest('tr'); // Assuming the checkbox is inside a row
+            const statusCell = row.querySelector('.status-cell'); // Assuming there's a status cell to update
+            if (statusCell) {
+                statusCell.textContent = isChecked ? 'Complete' : 'Incomplete';
+            }
         }
     }
     

@@ -102,12 +102,13 @@ th {
 }
 
 tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: #ffffff; /* Pure white */
 }
 
 tr:nth-child(odd) {
-    background-color: #ffffff;
+    background-color: #f7f7f7; /* Very light off-white */
 }
+
 
 /* Responsive design for portrait and landscape modes */
 
