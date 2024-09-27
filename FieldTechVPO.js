@@ -46,54 +46,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Fetch unique technician names with at least one incomplete record from Airtable
-    async function fetchTechniciansAndRecords() {
-        try {
-            let techniciansWithRecords = new Set(); // To store unique technician names
-            let records = []; // Store all fetched records for table
-            let offset = '';
-
-            // Fetch records progressively
-            do {
-                const response = await axios.get(`${airtableEndpoint}?fields[]=static Field Technician&fields[]=Field Tech Confirmed Job Complete&fields[]=Description of Work&offset=${offset}`);
-                const recordsBatch = response.data.records;
-
-                // Process each record and update dropdown and table incrementally
-                recordsBatch.forEach(record => {
-                    const techName = record.fields['static Field Technician'];
-                    const isJobComplete = record.fields['Field Tech Confirmed Job Complete'];
-                    
-                    // If technician name exists and job is incomplete, add to dropdown
-                    if (techName && !isJobComplete) {
-                        techniciansWithRecords.add(techName);
-                    }
-
-                    // Add to records if incomplete
-                    if (!isJobComplete) {
-                        records.push({
-                            id: record.id,
-                            fields: record.fields,
-                            descriptionOfWork: record.fields['Description of Work'],
-                        });
-                    }
-                });
-
-                // Update dropdown progressively after each batch
-                populateDropdownFromCache(Array.from(techniciansWithRecords));
-
-                // Update table with new records progressively
-                displayRecordsWithFadeIn(records);
-
-                offset = response.data.offset || ''; // Move to the next page of results
-
-            } while (offset);
-
-            return { technicians: Array.from(techniciansWithRecords), records };
-        } catch (error) {
-            console.error('Error fetching technicians and records:', error);
-            return { technicians: [], records: [] };
-        }
-    }
+    
 
 
     // Populate dropdown with technician names who have records
@@ -123,8 +76,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
     
 
-     // Populate dropdown progressively with technician names
-     function populateDropdownFromCache(technicians) {
+    function populateDropdownFromCache(technicians) {
+        const previouslySelectedTech = localStorage.getItem('fieldTech') || '';
+
         techDropdown.innerHTML = `
             <option value="">Select a Technician</option>
             <option value="all">Display All</option>
@@ -136,7 +90,13 @@ document.addEventListener("DOMContentLoaded", async function () {
             option.innerText = tech;
             techDropdown.appendChild(option);
         });
+
+        // Set the dropdown to the previously selected technician
+        if (previouslySelectedTech) {
+            techDropdown.value = previouslySelectedTech;
+        }
     }
+
 
     // Fetch all incomplete records (for "Display All" option)
     async function fetchAllIncompleteRecords() {
