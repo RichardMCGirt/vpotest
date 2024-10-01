@@ -464,37 +464,51 @@ async function fetchAllIncompleteRecords() {
     const modal = document.getElementById('modal');  // Reference the modal element
     const yesButton = document.getElementById('yesButton');
     const noButton = document.getElementById('noButton');
+    
     function hideFieldTechnicianColumnIfMatches() {
         const selectedTech = techDropdown.value; // Get the selected technician from the dropdown
         const rows = document.querySelectorAll('#records tbody tr'); // Get all table rows
-        let allMatch = true;
     
-        // Loop through all rows to check if "Field Technician" matches the dropdown value
-        rows.forEach(row => {
-            const fieldTechCell = row.querySelector('td:nth-child(5)'); // Assuming "Field Technician" is the 5th column
-            if (fieldTechCell && fieldTechCell.textContent.trim() !== selectedTech) {
-                allMatch = false; // If any value doesn't match, set allMatch to false
-            }
-        });
-    
-        // Get the "Field Technician" header and cells (assuming it's the 5th column)
+        // Get the "Field Technician" and "Branch" headers and cells
         const fieldTechHeader = document.querySelector('th:nth-child(5)');
+        const branchHeader = document.querySelector('th:nth-child(2)');
         const fieldTechCells = document.querySelectorAll('td:nth-child(5)');
+        const branchCells = document.querySelectorAll('td:nth-child(2)');
     
-        // Hide the column if all values match the dropdown value
-        if (allMatch && selectedTech !== "all") {
-            fieldTechHeader.style.display = 'none'; // Hide the header
+        // If "all" is selected, show both "Field Technician" and "Branch" columns
+        if (selectedTech === "all") {
+            fieldTechHeader.style.display = ''; // Show the Field Technician header
             fieldTechCells.forEach(cell => {
-                cell.style.display = 'none'; // Hide each cell in the column
+                cell.style.display = ''; // Show each Field Technician cell in the column
+            });
+            
+            branchHeader.style.display = ''; // Show the Branch header
+            branchCells.forEach(cell => {
+                cell.style.display = ''; // Show each Branch cell in the column
             });
         } else {
-            // If not all values match, ensure the column is visible
-            fieldTechHeader.style.display = '';
+            // Hide both "Field Technician" and "Branch" columns when a specific technician is selected
+            fieldTechHeader.style.display = 'none'; // Hide the Field Technician header
             fieldTechCells.forEach(cell => {
-                cell.style.display = '';
+                cell.style.display = 'none'; // Hide each Field Technician cell in the column
+            });
+    
+            branchHeader.style.display = 'none'; // Hide the Branch header
+            branchCells.forEach(cell => {
+                cell.style.display = 'none'; // Hide each Branch cell in the column
             });
         }
     }
+    
+    // Call the function when the dropdown changes
+    techDropdown.addEventListener('change', hideFieldTechnicianColumnIfMatches);
+    
+    // Call the function on page load to hide/show the columns based on the current selection
+    document.addEventListener("DOMContentLoaded", () => {
+        hideFieldTechnicianColumnIfMatches();
+    });
+    
+    
     
     
     // Call the function when the dropdown changes
