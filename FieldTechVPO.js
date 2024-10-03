@@ -208,25 +208,46 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     async function populateDropdown() {
         const cachedTechnicians = JSON.parse(localStorage.getItem('technicians'));
-    
+        
+        // Show loading message in the dropdown
+        techDropdown.innerHTML = '<option value="">Loading technicians...</option>';
+        
         // If cached technicians exist, load them into the dropdown first
         if (cachedTechnicians && cachedTechnicians.length > 0) {
             populateDropdownFromCache(cachedTechnicians);
             console.log('Dropdown populated from cache');
+        } else {
+            // No cache available, proceed with fetching and notify user
+            console.log('No cached data, fetching technician names from Airtable...');
         }
     
         // Check cache expiration or if no cache is available
         if (!cachedTechnicians || !lastFetch || currentTime - lastFetch > cacheTime) {
-            // Immediately fetch fresh technician names from Airtable if the cache is empty or expired
-            const technicians = await fetchTechniciansWithRecords();
-            localStorage.setItem('technicians', JSON.stringify(technicians));
-            localStorage.setItem('lastTechFetchTime', currentTime.toString());
+            try {
+                // Immediately fetch fresh technician names from Airtable if the cache is empty or expired
+                const technicians = await fetchTechniciansWithRecords();
     
-            // Update dropdown after fetching new data
-            populateDropdownFromCache(technicians);
-            console.log('Dropdown updated with fresh data');
+                // If no technicians were fetched, fetch all incomplete records
+                if (technicians.length === 0) {
+                    console.log("No technicians found, loading all records...");
+                    fetchAllIncompleteRecords(); // Fetch all records if no technicians are available
+                    return; // Stop further processing
+                }
+    
+                localStorage.setItem('technicians', JSON.stringify(technicians));
+                localStorage.setItem('lastTechFetchTime', currentTime.toString());
+    
+                // Update dropdown after fetching new data
+                populateDropdownFromCache(technicians);
+                console.log('Dropdown updated with fresh data');
+            } catch (error) {
+                console.error('Error fetching technicians:', error);
+                // Handle error by showing all records if technician names cannot be loaded
+                fetchAllIncompleteRecords(); // Fetch all records by default if an error occurs
+            }
         }
     }
+    
     
     function populateDropdownFromCache(technicians) {
         const previouslySelectedTech = localStorage.getItem('fieldTech') || '';
@@ -249,10 +270,16 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
     
-    // Call populateDropdown immediately when DOM is ready
-    document.addEventListener("DOMContentLoaded", async function () {
-        console.log("DOM fully loaded, populating dropdown...");
-        await populateDropdown();
+ // Call populateDropdown immediately when DOM is ready
+document.addEventListener("DOMContentLoaded", async function () {
+    console.log("DOM fully loaded, populating dropdown...");
+    await populateDropdown();
+    
+    // Fetch all records if no technician is selected or no data is loaded in dropdown
+    if (!techDropdown.value || techDropdown.value === "") {
+        console.log("No technician selected, loading all records...");
+        fetchAllIncompleteRecords(); // Fetch all incomplete records by default
+    }
     });
     
     // Define the fetchAllIncompleteRecords function
