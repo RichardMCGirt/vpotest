@@ -267,44 +267,46 @@ async function fetchAllIncompleteRecords() {
         let offset = '';
 
         // Step 1: Calculate total number of incomplete records
-        console.log("Calculating total number of incomplete records...");
-        do {
-            const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
-            const incompleteRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
-            totalIncompleteRecords += incompleteRecords.length; // Count only incomplete records
-            offset = response.data.offset || ''; // Move to the next page of results
-        } while (offset);
+// Step 1: Calculate total number of incomplete records
+console.log("Calculating total number of incomplete records...");
+do {
+    const response = await axios.get(`${airtableEndpoint}?filterByFormula=AND(NOT({Field Tech Confirmed Job Complete}), {VPO Status} = 'Awaiting Field Tech Complete Confirmation')&offset=${offset}`);
+    const incompleteRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
+    totalIncompleteRecords += incompleteRecords.length; // Count only incomplete records
+    offset = response.data.offset || ''; // Move to the next page of results
+} while (offset);
 
-        console.log(`Total incomplete records to fetch: ${totalIncompleteRecords}`);
+console.log(`Total incomplete records to fetch: ${totalIncompleteRecords}`);
 
-        // Step 2: Fetch incomplete records and update the percentage
-        offset = ''; // Reset the offset to fetch records again
-        do {
-            const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
-            const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
-                .map(record => ({
-                    id: record.id,
-                    fields: record.fields,
-                    descriptionOfWork: record.fields['Description of Work']
-                }));
-            records = records.concat(pageRecords);
-            fetchedRecords += pageRecords.length;
+// Step 2: Fetch incomplete records and update the percentage
+offset = ''; // Reset the offset to fetch records again
+do {
+    const response = await axios.get(`${airtableEndpoint}?filterByFormula=AND(NOT({Field Tech Confirmed Job Complete}), {VPO Status} = 'Awaiting Field Tech Complete Confirmation')&offset=${offset}`);
+    const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
+        .map(record => ({
+            id: record.id,
+            fields: record.fields,
+            descriptionOfWork: record.fields['Description of Work']
+        }));
+    records = records.concat(pageRecords);
+    fetchedRecords += pageRecords.length;
 
-            // Update the loading bar based on how many records have been fetched
-            updateLoadingBar(fetchedRecords, totalIncompleteRecords);
+    // Update the loading bar based on how many records have been fetched
+    updateLoadingBar(fetchedRecords, totalIncompleteRecords);
 
-            offset = response.data.offset || ''; // Move to the next page of results
-        } while (offset);
+    offset = response.data.offset || ''; // Move to the next page of results
+} while (offset);
 
-        toggleSearchBarVisibility(records); // Hide search bar if fewer than 6 records
-        displayRecordsWithFadeIn(records); // Display all incomplete records with fade-in effect
-        console.log(`Fetched ${records.length} incomplete records.`);
-        
-    } catch (error) {
-        console.error('Error fetching all incomplete records:', error);
-    } finally {
-        hideLoadingBar(); // Hide the loading bar after fetching is complete
-    }
+toggleSearchBarVisibility(records); // Hide search bar if fewer than 6 records
+displayRecordsWithFadeIn(records); // Display all incomplete records with fade-in effect
+console.log(`Fetched ${records.length} incomplete records.`);
+
+} catch (error) {
+    console.error('Error fetching all incomplete records:', error);
+} finally {
+    hideLoadingBar(); // Hide the loading bar after fetching is complete
+}
+
 }
 
 
