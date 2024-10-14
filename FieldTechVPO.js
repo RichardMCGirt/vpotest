@@ -132,13 +132,13 @@ function updateLoadingBar(current, total) {
     
         try {
             console.log("Fetching a batch of records from Airtable...");
-            showLoadingBar();  // Show the loading bar
+            showLoadingBar();  // Show the loading bar after 3 seconds
     
             const response = await axios.get(`${airtableEndpoint}?filterByFormula=AND(NOT({Field Tech Confirmed Job Complete}), {VPO Status} = 'Awaiting Field Tech Complete Confirmation')&offset=${offset}&pageSize=20`); // Fetch 20 records per batch
             const pageRecords = response.data.records;
             offset = response.data.offset || '';  // Update the offset for the next batch
     
-            let totalRecords = pageRecords.length;
+            let totalRecords = pageRecords.length; // Assuming you will calculate or pass the total number of records
             let fetchedRecords = 0;
     
             pageRecords.forEach((record, index) => {
@@ -159,14 +159,12 @@ function updateLoadingBar(current, total) {
                 updateLoadingBar(fetchedRecords, totalRecords); // Update after each record
             });
     
-            console.log('Hiding the loading bar');
-            hideLoadingBar();
-                        console.log(`Fetched and displayed ${pageRecords.length} records.`);
+            hideLoadingBar();  // Hide the loading bar when fetching and rendering is done
+            console.log(`Fetched and displayed ${pageRecords.length} records.`);
         } catch (error) {
             console.error('Error fetching records:', error);
-            console.log('Hiding the loading bar');
-            hideLoadingBar();
-                    } finally {
+            hideLoadingBar();  // Hide the loading bar in case of an error
+        } finally {
             isLoading = false;
         }
     }
@@ -233,7 +231,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     let loadingBarTimeout; // To store the timeout reference
     let loadingStartTime;  // To track when loading started
     
-  // Function to show the loading bar after 3 seconds
+// Function to show the loading bar after 3 seconds
 function showLoadingBar() {
     loadingStartTime = Date.now();
     loadingBarTimeout = setTimeout(() => {
@@ -243,7 +241,7 @@ function showLoadingBar() {
     }, 3000); // Delay for 3 seconds
 }
 
-// Function to hide the loading bar immediately when loading is complete
+// Function to hide the loading bar 2 seconds after all records have been fetched
 function hideLoadingBar() {
     const loadingBarContainer = document.getElementById('loadingBarContainer');
     
@@ -253,10 +251,14 @@ function hideLoadingBar() {
         console.log("Loading completed in less than 3 seconds, canceling loading bar display.");
         clearTimeout(loadingBarTimeout); // Cancel showing the loading bar if loading finishes quickly
     } else {
-        loadingBarContainer.style.display = 'none'; // Hide if the bar was shown
-        console.log("Loading bar hidden.");
+        // Delay hiding the loading bar by 2 seconds
+        setTimeout(() => {
+            loadingBarContainer.style.display = 'none'; // Hide the loading bar after the delay
+            console.log("Loading bar hidden 2 seconds after fetching all records.");
+        }, 2000); // 2 seconds delay
     }
 }
+
 
 
 
