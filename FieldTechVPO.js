@@ -11,6 +11,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     const airtableBaseId = 'appQDdkj6ydqUaUkE';
     const airtableTableName = 'tblO72Aw6qplOEAhR';
     const airtableEndpoint = `https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`;
+const loadingPercentage = document.getElementById('loadingPercentage');
+
+console.log('loadingBar element:', loadingBar);
+console.log('loadingPercentage element:', loadingPercentage);
+
 
     axios.defaults.headers.common['Authorization'] = `Bearer ${airtableApiKey}`;
 
@@ -31,18 +36,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    let loadingBarTimeout; // To store the timeout reference
-    let loadingStartTime;  // To track when loading started
-    
-    // Show the loading bar after a 3-second delay
-    function showLoadingBar() {
-        loadingStartTime = Date.now();
-        loadingBarTimeout = setTimeout(() => {
-            const loadingBarContainer = document.getElementById('loadingBarContainer');
-            loadingBarContainer.style.display = 'block'; // Show the loading bar
-            console.log("Loading bar displayed after 3 seconds");
-        }, 3000); // Delay for 3 seconds
-    }
+
 
     // Function to handle search input and filter table rows
 function filterTable() {
@@ -74,25 +68,46 @@ function filterTable() {
 searchBar.addEventListener('input', filterTable);
 
     
-    // Hide the loading bar immediately when loading is complete
-    function hideLoadingBar() {
-        const loadingBarContainer = document.getElementById('loadingBarContainer');
-        
-        // Check if loading finished in less than 3 seconds
-        const elapsedTime = Date.now() - loadingStartTime;
-        if (elapsedTime < 3000) {
-            console.log("Loading completed in less than 3 seconds, not showing the loading bar.");
-            clearTimeout(loadingBarTimeout); // Cancel showing the loading bar if loading finishes quickly
-        } else {
-            loadingBarContainer.style.display = 'none'; // Hide if the bar was shown
-            console.log("Loading bar hidden.");
-        }
+
+// Function to update loading bar progress
+function updateLoadingBar(current, total) {
+    const loadingBar = document.getElementById('loadingBar'); // Ensure the correct element is targeted
+    const loadingPercentage = document.getElementById('loadingPercentage'); // Ensure correct element for percentage text
+    console.log(`updateLoadingBar called with current: ${current}, total: ${total}`);
+
+
+    // Log to check if elements are being selected properly
+    if (!loadingBar) {
+        console.error("Loading bar element is not found");
+    } else {
+        console.log("Loading bar element found.");
     }
 
-        // Function to update loading bar progress
-        function updateLoadingBar(progressPercentage) {
-            loadingBar.style.width = `${progressPercentage}%`; // Update the width of the loading bar
-        }
+    if (!loadingPercentage) {
+        console.error("Loading percentage element is not found");
+    } else {
+        console.log("Loading percentage element found.");
+    }
+
+    // Calculate percentage
+    const percentage = Math.min(Math.round((current / total) * 100), 100);
+    console.log(`Current progress: ${current} / ${total} records. Calculated percentage: ${percentage}%`);
+
+    // Update the width of the loading bar and display percentage
+    if (loadingBar && loadingPercentage) {
+        loadingBar.style.width = `${percentage}%`;
+        loadingPercentage.innerText = `${percentage}%`;
+        console.log(`Loading bar width updated to: ${loadingBar.style.width}`);
+        console.log(`Loading percentage text updated to: ${loadingPercentage.innerText}`);
+    } else {
+        console.error("Unable to update loading bar or percentage text due to missing elements.");
+    }
+
+    console.log(`Loading bar progress complete: ${percentage}% (${current} of ${total} records fetched).`);
+}
+
+
+
 
             // Function to display a message when user interacts with the dropdown during loading
     function showLoadingMessage() {
@@ -101,17 +116,7 @@ searchBar.addEventListener('input', filterTable);
     }
        // Add a listener to prevent dropdown interaction during loading
        techDropdown.addEventListener('click', showLoadingMessage);
-    // Update the loading bar based on progress
-    function updateLoadingBar(current, total) {
-        const loadingBar = document.getElementById('loadingBar');
-        const loadingPercentage = document.getElementById('loadingPercentage');
-    
-        const percentage = Math.min(Math.round((current / total) * 100), 100); // Calculate percentage
-        loadingBar.style.width = `${percentage}%`;  // Update bar width
-        loadingPercentage.innerText = `${percentage}%`;  // Update percentage text
-    
-        console.log(`Loading bar updated: ${percentage}% (${current} of ${total} records fetched).`);
-    }
+
     
     let offset = ''; // Track the offset for pagination
     
@@ -133,8 +138,11 @@ searchBar.addEventListener('input', filterTable);
             const pageRecords = response.data.records;
             offset = response.data.offset || '';  // Update the offset for the next batch
     
-            // Populate the table with the fetched batch of records
-            pageRecords.forEach(record => {
+            let totalRecords = pageRecords.length;
+            let fetchedRecords = 0;
+    
+            pageRecords.forEach((record, index) => {
+                // Append records to the table
                 const recordRow = document.createElement('tr');
                 recordRow.innerHTML = `
                     <td>${record.fields['ID Number'] || ''}</td>
@@ -145,17 +153,24 @@ searchBar.addEventListener('input', filterTable);
                     <td>${record.fields['Field Tech Confirmed Job Complete'] ? 'Yes' : 'No'}</td>
                 `;
                 recordsTableBody.appendChild(recordRow);
+    
+                // Increment fetched records and update the loading bar
+                fetchedRecords++;
+                updateLoadingBar(fetchedRecords, totalRecords); // Update after each record
             });
     
-            hideLoadingBar();  // Hide the loading bar
-            console.log(`Fetched and displayed ${pageRecords.length} records.`);
+            console.log('Hiding the loading bar');
+            hideLoadingBar();
+                        console.log(`Fetched and displayed ${pageRecords.length} records.`);
         } catch (error) {
             console.error('Error fetching records:', error);
-            hideLoadingBar();  // Hide the loading bar in case of an error
-        } finally {
+            console.log('Hiding the loading bar');
+            hideLoadingBar();
+                    } finally {
             isLoading = false;
         }
     }
+    
     
     // Lazy load on scroll
     window.addEventListener('scroll', () => {
@@ -215,21 +230,35 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
     
 
-    // Function to show loading bar
-    function showLoadingBar() {
-        loadingBarContainer.style.display = 'block';
-        loadingBar.style.width = '0%';
-    }
+    let loadingBarTimeout; // To store the timeout reference
+    let loadingStartTime;  // To track when loading started
+    
+  // Function to show the loading bar after 3 seconds
+function showLoadingBar() {
+    loadingStartTime = Date.now();
+    loadingBarTimeout = setTimeout(() => {
+        const loadingBarContainer = document.getElementById('loadingBarContainer');
+        loadingBarContainer.style.display = 'block'; // Show the loading bar
+        console.log("Loading bar displayed after 3 seconds");
+    }, 3000); // Delay for 3 seconds
+}
 
-    // Function to hide loading bar
-    function hideLoadingBar() {
-        loadingBarContainer.style.display = 'none';
+// Function to hide the loading bar immediately when loading is complete
+function hideLoadingBar() {
+    const loadingBarContainer = document.getElementById('loadingBarContainer');
+    
+    // Check if loading finished in less than 3 seconds
+    const elapsedTime = Date.now() - loadingStartTime;
+    if (elapsedTime < 3000) {
+        console.log("Loading completed in less than 3 seconds, canceling loading bar display.");
+        clearTimeout(loadingBarTimeout); // Cancel showing the loading bar if loading finishes quickly
+    } else {
+        loadingBarContainer.style.display = 'none'; // Hide if the bar was shown
+        console.log("Loading bar hidden.");
     }
+}
 
-    // Function to update loading bar progress
-    function updateLoadingBar(progressPercentage) {
-        loadingBar.style.width = `${progressPercentage}%`;
-    }
+
 
     async function populateDropdown() {
         showLoadingBar();  // Show loading bar when dropdown starts populating
