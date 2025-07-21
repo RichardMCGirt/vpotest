@@ -44,6 +44,24 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
+    async function reloadTableForSelection(selectedTech) {
+    // Clear previous state
+    records = [];
+    fetchedRecords = 0;
+    totalIncompleteRecords = 0;
+    offset = '';
+    // Clear table UI
+    document.getElementById('records').innerHTML = '';
+    // Fetch
+    if (selectedTech === "all" || !selectedTech) {
+        await fetchAllIncompleteRecords();
+    } else {
+        await fetchRecordsForTech(selectedTech);
+    }
+    hideFieldTechnicianColumnIfMatches();
+}
+
+
     // Function to handle search input and filter table rows
 function filterTable() {
     const searchTerm = searchBar.value.toLowerCase(); // Get the search term and convert to lowercase
@@ -231,14 +249,10 @@ const response = await axios.get(`${airtableEndpoint}?${params.toString()}`);
     // Call populateDropdown immediately when DOM is ready
 document.addEventListener("DOMContentLoaded", async function () {
     await populateDropdown();
-    const storedTech = localStorage.getItem('fieldTech');
-    if (storedTech && storedTech !== "all") {
-        await fetchRecordsForTech(storedTech);
-    } else {
-        await fetchAllIncompleteRecords();
-    }
-    hideFieldTechnicianColumnIfMatches();
+    const storedTech = localStorage.getItem('fieldTech') || "all";
+    await reloadTableForSelection(storedTech);
 });
+
 
     
  // Define the fetchAllIncompleteRecords function
@@ -469,18 +483,13 @@ async function fetchRecordsForTech(fieldTech) {
     
     // Call the function when the dropdown changes
 // Handle dropdown change event
-techDropdown.addEventListener('change', () => {
+techDropdown.addEventListener('change', async () => {
     const selectedTech = techDropdown.value;
-    
-    if (selectedTech === "all") {
-        fetchAllIncompleteRecords(); // Fetch and display all incomplete records
-    } else if (selectedTech) {
-        localStorage.setItem('fieldTech', selectedTech);
-        displayNameElement.innerText = `Logged in as: ${selectedTech}`;
-        fetchRecordsForTech(selectedTech); // Fetch records for the selected technician
-    }
-    hideFieldTechnicianColumnIfMatches(); // Check and hide the Field Technician column if applicable
+    localStorage.setItem('fieldTech', selectedTech || "all");
+    displayNameElement.innerText = selectedTech && selectedTech !== "all" ? `Logged in as: ${selectedTech}` : '';
+    await reloadTableForSelection(selectedTech);
 });
+
     
     // Call the function on page load to hide/show the columns based on the current selection
     document.addEventListener("DOMContentLoaded", () => {
