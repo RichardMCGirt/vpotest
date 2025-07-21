@@ -9,14 +9,7 @@
 
 </head>
 <body>
-    <br>
-    <div id="loadingBarContainer" style="display:none;">
-        <div id="loadingBar" style="width: 100%; height: 20px; background-color: #007bff;"></div>
-        <span id="loadingPercentage">0%</span>
-    </div>
-    
-    <div id="spinner" class="spinner" style="display:none;"></div>
-
+ 
     <h3 id="searchBarTitle" class="hidden underline">Open VPOs Awaiting Field Tech</h3>
     <div>
         <input type="text" id="searchBar" class="hidden"  placeholder="Search">
@@ -27,10 +20,6 @@
     <select id="techDropdown">
         <option value="all">Display All</option>
     </select>
-    
-    
-    
-
     
     <!-- Table is wrapped in a scrollable div -->
     <div class="table-container">
@@ -43,7 +32,6 @@
         </div>
     </div>
     
-
     <div class="modal-overlay" id="modalOverlay"></div>
 
     <div id="modal">
@@ -52,9 +40,6 @@
         <button id="noButton">No</button>
     </div>
     
-    
-      
-
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="FieldTechVPO.js"></script>
 </body>

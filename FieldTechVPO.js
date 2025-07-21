@@ -1,29 +1,38 @@
-document.addEventListener("DOMContentLoaded", async function () {
-    console.log('DOM fully loaded and parsed');
+        let records = [];
+        let fetchedRecords = 0;
+        let totalIncompleteRecords = 0;
+        let offset = '';
+        let isLoading = true; 
+        let rowContainsTerm = false; 
+        let techniciansWithRecords = new Set(); 
+        let currentCheckbox = null; 
+        let currentRecordId = null;  
+        let totalRecords = 0; 
 
+        const fieldsToFetch = [
+  'ID Number',
+  'static Vanir Office',
+  'Job Name',
+  'Description of Work',
+  'static Field Technician',
+  'Field Tech Confirmed Job Complete'
+];
+
+      
+document.addEventListener("DOMContentLoaded", async function () {
 
     const storedTech = localStorage.getItem('fieldTech');
     const displayNameElement = document.getElementById('displayName');
-    const techDropdown = document.getElementById('techDropdown'); // Get the dropdown element
-    const searchBar = document.getElementById('searchBar'); // Reference to the search bar
-    const loadingBar = document.getElementById('loadingBar'); // Reference to the loading bar element
+    const techDropdown = document.getElementById('techDropdown'); 
+    const searchBar = document.getElementById('searchBar'); 
     const airtableApiKey = 'pata9Iv7DANqtJrgO.b308b33cd0f323601f3fb580aac0d333ca1629dd26c5ebe2e2b9f18143ccaa8e';
     const airtableBaseId = 'appQDdkj6ydqUaUkE';
     const airtableTableName = 'tblO72Aw6qplOEAhR';
     const airtableEndpoint = `https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`;
-const loadingPercentage = document.getElementById('loadingPercentage');
-
-console.log('loadingBar element:', loadingBar);
-console.log('loadingPercentage element:', loadingPercentage);
-
-
     axios.defaults.headers.common['Authorization'] = `Bearer ${airtableApiKey}`;
 
-    let technicianRecords = []; // Store records fetched for the logged-in technician
-    let isLoading = true; // Variable to track whether the page is still loading
-
     // Disable the dropdown initially while loading
-    const cacheTime = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+    const cacheTime = 24 * 60 * 60 * 1000; 
     const lastFetch = localStorage.getItem('lastTechFetchTime');
     const currentTime = new Date().getTime();
 
@@ -36,8 +45,6 @@ console.log('loadingPercentage element:', loadingPercentage);
         }
     }
 
-
-
     // Function to handle search input and filter table rows
 function filterTable() {
     const searchTerm = searchBar.value.toLowerCase(); // Get the search term and convert to lowercase
@@ -47,7 +54,6 @@ function filterTable() {
     // Loop through all rows except the first one (which is the table header)
     for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
-        let rowContainsTerm = false; // Flag to check if the row contains the search term
 
         // Loop through each cell in the row
         const cells = row.getElementsByTagName('td');
@@ -67,49 +73,8 @@ function filterTable() {
 // Add an event listener for the search bar input event
 searchBar.addEventListener('input', filterTable);
 
-    
 
-// Function to update loading bar progress
-function updateLoadingBar(current, total) {
-    const loadingBar = document.getElementById('loadingBar'); // Ensure the correct element is targeted
-    const loadingPercentage = document.getElementById('loadingPercentage'); // Ensure correct element for percentage text
-    console.log(`updateLoadingBar called with current: ${current}, total: ${total}`);
-
-
-    // Log to check if elements are being selected properly
-    if (!loadingBar) {
-        console.error("Loading bar element is not found");
-    } else {
-        console.log("Loading bar element found.");
-    }
-
-    if (!loadingPercentage) {
-        console.error("Loading percentage element is not found");
-    } else {
-        console.log("Loading percentage element found.");
-    }
-
-    // Calculate percentage
-    const percentage = Math.min(Math.round((current / total) * 100), 100);
-    console.log(`Current progress: ${current} / ${total} records. Calculated percentage: ${percentage}%`);
-
-    // Update the width of the loading bar and display percentage
-    if (loadingBar && loadingPercentage) {
-        loadingBar.style.width = `${percentage}%`;
-        loadingPercentage.innerText = `${percentage}%`;
-        console.log(`Loading bar width updated to: ${loadingBar.style.width}`);
-        console.log(`Loading percentage text updated to: ${loadingPercentage.innerText}`);
-    } else {
-        console.error("Unable to update loading bar or percentage text due to missing elements.");
-    }
-
-    console.log(`Loading bar progress complete: ${percentage}% (${current} of ${total} records fetched).`);
-}
-
-
-
-
-            // Function to display a message when user interacts with the dropdown during loading
+ // Function to display a message when user interacts with the dropdown during loading
     function showLoadingMessage() {
         if (isLoading) {
         }
@@ -117,9 +82,6 @@ function updateLoadingBar(current, total) {
        // Add a listener to prevent dropdown interaction during loading
        techDropdown.addEventListener('click', showLoadingMessage);
 
-    
-    let offset = ''; // Track the offset for pagination
-    
     async function fetchAndDisplayRecords() {
         const recordsTableBody = document.querySelector('#records tbody');
         if (!recordsTableBody) {
@@ -131,16 +93,17 @@ function updateLoadingBar(current, total) {
         isLoading = true;
     
         try {
-            console.log("Fetching a batch of records from Airtable...");
             showLoadingBar();  // Show the loading bar after 3 seconds
     
-            const response = await axios.get(`${airtableEndpoint}?filterByFormula=AND(NOT({Field Tech Confirmed Job Complete}), {VPO Status} = 'Awaiting Field Tech Complete Confirmation')&offset=${offset}&pageSize=20`); // Fetch 20 records per batch
+const params = new URLSearchParams();
+fieldsToFetch.forEach(f => params.append('fields[]', f));
+params.append('filterByFormula', "AND(NOT({Field Tech Confirmed Job Complete}), {VPO Status} = 'Awaiting Field Tech Complete Confirmation')");
+params.append('offset', offset);
+params.append('pageSize', 20);
+
+const response = await axios.get(`${airtableEndpoint}?${params.toString()}`);
             const pageRecords = response.data.records;
             offset = response.data.offset || '';  // Update the offset for the next batch
-    
-            let totalRecords = pageRecords.length; // Assuming you will calculate or pass the total number of records
-            let fetchedRecords = 0;
-    
             pageRecords.forEach((record, index) => {
                 // Append records to the table
                 const recordRow = document.createElement('tr');
@@ -160,7 +123,6 @@ function updateLoadingBar(current, total) {
             });
     
             hideLoadingBar();  // Hide the loading bar when fetching and rendering is done
-            console.log(`Fetched and displayed ${pageRecords.length} records.`);
         } catch (error) {
             console.error('Error fetching records:', error);
             hideLoadingBar();  // Hide the loading bar in case of an error
@@ -168,7 +130,6 @@ function updateLoadingBar(current, total) {
             isLoading = false;
         }
     }
-    
     
     // Lazy load on scroll
     window.addEventListener('scroll', () => {
@@ -178,26 +139,18 @@ function updateLoadingBar(current, total) {
             if (offset) {
                 fetchAndDisplayRecords();
             } else {
-                console.log("No more records to load.");
             }
         }
     });
     
-    
-
-
 // Call this function on page load
 document.addEventListener("DOMContentLoaded", async function () {
-    console.log("DOM fully loaded, triggering record fetch...");
     await fetchAndDisplayRecords();
 });
-
 
     // Fetch unique technician names with at least one incomplete record from Airtable
     async function fetchTechniciansWithRecords() {
         try {
-            let techniciansWithRecords = new Set(); // Use a Set to ensure uniqueness
-            let offset = '';
 
             // Fetch all records
             do {
@@ -226,44 +179,8 @@ document.addEventListener("DOMContentLoaded", async function () {
       function toggleSearchBarVisibility(recordsCount) {
         searchBar.style.display = recordsCount < 6 ? 'none' : 'block';
     }
-    
-
-    let loadingBarTimeout; // To store the timeout reference
-    let loadingStartTime;  // To track when loading started
-    
-// Function to show the loading bar after 3 seconds
-function showLoadingBar() {
-    loadingStartTime = Date.now();
-    loadingBarTimeout = setTimeout(() => {
-        const loadingBarContainer = document.getElementById('loadingBarContainer');
-        loadingBarContainer.style.display = 'block'; // Show the loading bar
-        console.log("Loading bar displayed after 3 seconds");
-    }, 3000); // Delay for 3 seconds
-}
-
-// Function to hide the loading bar 2 seconds after all records have been fetched
-function hideLoadingBar() {
-    const loadingBarContainer = document.getElementById('loadingBarContainer');
-    
-    // Check if loading finished in less than 3 seconds
-    const elapsedTime = Date.now() - loadingStartTime;
-    if (elapsedTime < 3000) {
-        console.log("Loading completed in less than 3 seconds, canceling loading bar display.");
-        clearTimeout(loadingBarTimeout); // Cancel showing the loading bar if loading finishes quickly
-    } else {
-        // Delay hiding the loading bar by 2 seconds
-        setTimeout(() => {
-            loadingBarContainer.style.display = 'none'; // Hide the loading bar after the delay
-            console.log("Loading bar hidden 2 seconds after fetching all records.");
-        }, 2000); // 2 seconds delay
-    }
-}
-
-
-
-
+        
     async function populateDropdown() {
-        showLoadingBar();  // Show loading bar when dropdown starts populating
         
         const cachedTechnicians = JSON.parse(localStorage.getItem('technicians'));
     
@@ -293,9 +210,7 @@ function hideLoadingBar() {
             fetchRecordsForTech(storedTech); // Fetch records for the stored technician
         }
     
-        hideLoadingBar(); // Hide loading bar once dropdown is populated
     }
-    
     
     function populateDropdownFromCache(technicians) {
         const previouslySelectedTech = localStorage.getItem('fieldTech') || '';
@@ -322,27 +237,13 @@ function hideLoadingBar() {
     document.addEventListener("DOMContentLoaded", async function () {
         console.log("DOM fully loaded, populating dropdown...");
         await populateDropdown();
+        await populateDropdown();  // Populate the dropdown and show loading bar until done
     });
-
-        // Call populateDropdown immediately when DOM is ready
-        document.addEventListener("DOMContentLoaded", async function () {
-            console.log("DOM fully loaded, populating dropdown...");
-            await populateDropdown();  // Populate the dropdown and show loading bar until done
-        });
     
  // Define the fetchAllIncompleteRecords function
 async function fetchAllIncompleteRecords() {
     try {
-        showLoadingBar();
-        console.log(`Fetching all incomplete records from Airtable...`);
-
-        let records = [];
-        let fetchedRecords = 0;
-        let totalIncompleteRecords = 0;
-        let offset = '';
-
         // Step 1: Calculate total number of incomplete records
-        console.log("Calculating total number of incomplete records...");
         do {
             const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
             const incompleteRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
@@ -350,7 +251,6 @@ async function fetchAllIncompleteRecords() {
             offset = response.data.offset || ''; // Move to the next page of results
         } while (offset);
 
-        console.log(`Total incomplete records to fetch: ${totalIncompleteRecords}`);
 
         // Reset the offset to start fetching records
         offset = '';
@@ -369,14 +269,10 @@ async function fetchAllIncompleteRecords() {
             fetchedRecords += pageRecords.length;
 
             // Update the loading bar with current progress
-            updateLoadingBar(fetchedRecords, totalIncompleteRecords);
 
             offset = response.data.offset || ''; // Move to the next page of results
             console.log(`Fetched ${fetchedRecords} records so far.`);
         } while (offset);
-
-        // Hide the loading bar once fetching is complete
-        hideLoadingBar();
 
         // Populate the table with the fetched records
         displayRecordsWithFadeIn(records); // Display records with fade-in effect
@@ -388,27 +284,14 @@ async function fetchAllIncompleteRecords() {
     } catch (error) {
         console.error('Error fetching all incomplete records:', error);
     } finally {
-        hideLoadingBar(); // Hide the loading bar after fetching is complete
     }
 }
-
-    
-
-
 
 // Fetch records for a selected technician
 async function fetchRecordsForTech(fieldTech) {
     try {
-        showLoadingBar(); // Show the loading bar
-        updateLoadingBar(0, 100); // Reset loading bar to 0%
 
-        console.log(`Fetching records for ${fieldTech} from Airtable...`);
-    
-        let records = [];
-        let fetchedRecords = 0;
-        let totalIncompleteRecords = 0;
-        let offset = '';
-    
+     
         // Step 1: Calculate total number of incomplete records for the selected technician
         console.log(`Calculating total number of incomplete records for ${fieldTech}...`);
         const filterByFormula = `SEARCH("${fieldTech}", {static Field Technician})`;
@@ -418,9 +301,7 @@ async function fetchRecordsForTech(fieldTech) {
             totalIncompleteRecords += incompleteRecords.length; // Count only incomplete records
             offset = response.data.offset || ''; // Move to the next page of results
         } while (offset);
-    
-        console.log(`Total incomplete records for ${fieldTech}: ${totalIncompleteRecords}`);
-    
+        
         // Step 2: Fetch records and update the loading bar
         offset = ''; // Reset the offset to fetch records again
         do {
@@ -435,18 +316,14 @@ async function fetchRecordsForTech(fieldTech) {
             fetchedRecords += pageRecords.length;
 
             // Update the loading bar based on the percentage of records fetched
-            updateLoadingBar(fetchedRecords, totalIncompleteRecords);
     
             offset = response.data.offset || ''; // Move to the next page of results
             console.log(`Fetched ${fetchedRecords} records so far.`);
         } while (offset);
 
-        // Ensure the loading bar ends at 100%
-        updateLoadingBar(totalIncompleteRecords, totalIncompleteRecords); // Set loading to 100% when done
     
         toggleSearchBarVisibility(records); // Hide search bar if fewer than 6 records
         displayRecordsWithFadeIn(records); // Display the selected technician's records with fade-in effect
-        console.log(`Fetched ${records.length} incomplete records for ${fieldTech}.`);
         
         // Call hideFieldTechnicianColumnIfMatches after populating the records
         hideFieldTechnicianColumnIfMatches();
@@ -454,13 +331,9 @@ async function fetchRecordsForTech(fieldTech) {
     } catch (error) {
         console.error(`Error fetching records for technician ${fieldTech}:`, error);
     } finally {
-        hideLoadingBar(); // Hide the loading bar after fetching is complete
     }
 }
 
-
-
-    
     // Function to display records with fade-in effect
     function displayRecordsWithFadeIn(records) {
         console.log('Displaying records...');
@@ -506,7 +379,6 @@ async function fetchRecordsForTech(fieldTech) {
         console.log(`Total number of entries displayed: ${records.length}`);
     }
 
-
     function sortRecordsWithSpecialCondition(records) {
         return records.sort((a, b) => {
             const idA = a.fields['ID Number'] || ''; // Fetch the ID Number field from record A
@@ -526,7 +398,6 @@ async function fetchRecordsForTech(fieldTech) {
         });
     }
     
-
     function createRecordRow(record) {
         const recordRow = document.createElement('tr');
         const IDNumber = record.fields['ID Number'] || '';
@@ -600,10 +471,6 @@ async function fetchRecordsForTech(fieldTech) {
 techDropdown.addEventListener('change', () => {
     const selectedTech = techDropdown.value;
     
-    // Reset loading bar and fetch records based on dropdown selection
-    showLoadingBar(); // Reset and show the loading bar
-    updateLoadingBar(0, 100); // Set loading bar to 0% initially
-
     if (selectedTech === "all") {
         fetchAllIncompleteRecords(); // Fetch and display all incomplete records
     } else if (selectedTech) {
@@ -618,14 +485,7 @@ techDropdown.addEventListener('change', () => {
     document.addEventListener("DOMContentLoaded", () => {
         hideFieldTechnicianColumnIfMatches();
     });
-    
-    
-    
-    
-    // Call the function when the dropdown changes
-    let currentCheckbox = null; // Declare at a higher scope
-    let currentRecordId = null;  // Declare at a higher scope
-    
+        
     // Function to handle checkbox click event
     function handleCheckboxClick(event) {
         currentCheckbox = event.target;  // Assign current checkbox globally
@@ -661,7 +521,6 @@ techDropdown.addEventListener('change', () => {
         modal.style.display = 'none';
     });
     
-
     async function submitUpdate(recordId, isChecked) {
         console.log(`Submitting update for record ID ${recordId}...`);
     
@@ -694,7 +553,6 @@ techDropdown.addEventListener('change', () => {
         }
     }
     
-    
     function updateCheckboxUI(recordId, isChecked) {
         // Find the checkbox element using the record ID
         const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);
@@ -712,7 +570,6 @@ techDropdown.addEventListener('change', () => {
         }
     }
     
-
      // Handle dropdown change event
      techDropdown.addEventListener('change', () => {
         const selectedTech = techDropdown.value;
@@ -730,7 +587,6 @@ techDropdown.addEventListener('change', () => {
     await populateDropdown(); // Populate the dropdown and show loading bar until done
 
     await fetchAndDisplayRecords();
-
 
     // Fetch records for the logged-in technician on page load if available
     if (storedTech && storedTech !== "all") {
