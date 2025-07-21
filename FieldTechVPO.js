@@ -18,7 +18,6 @@
   'Field Tech Confirmed Job Complete'
 ];
 
-      
 document.addEventListener("DOMContentLoaded", async function () {
 
     const storedTech = localStorage.getItem('fieldTech');
@@ -72,7 +71,6 @@ function filterTable() {
 
 // Add an event listener for the search bar input event
 searchBar.addEventListener('input', filterTable);
-
 
  // Function to display a message when user interacts with the dropdown during loading
     function showLoadingMessage() {
@@ -143,10 +141,7 @@ const response = await axios.get(`${airtableEndpoint}?${params.toString()}`);
         }
     });
     
-// Call this function on page load
-document.addEventListener("DOMContentLoaded", async function () {
-    await fetchAndDisplayRecords();
-});
+
 
     // Fetch unique technician names with at least one incomplete record from Airtable
     async function fetchTechniciansWithRecords() {
@@ -234,11 +229,17 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
     
     // Call populateDropdown immediately when DOM is ready
-    document.addEventListener("DOMContentLoaded", async function () {
-        console.log("DOM fully loaded, populating dropdown...");
-        await populateDropdown();
-        await populateDropdown();  // Populate the dropdown and show loading bar until done
-    });
+document.addEventListener("DOMContentLoaded", async function () {
+    await populateDropdown();
+    const storedTech = localStorage.getItem('fieldTech');
+    if (storedTech && storedTech !== "all") {
+        await fetchRecordsForTech(storedTech);
+    } else {
+        await fetchAllIncompleteRecords();
+    }
+    hideFieldTechnicianColumnIfMatches();
+});
+
     
  // Define the fetchAllIncompleteRecords function
 async function fetchAllIncompleteRecords() {
