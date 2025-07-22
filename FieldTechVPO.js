@@ -1,15 +1,14 @@
-        let records = [];
-        let fetchedRecords = 0;
-        let totalIncompleteRecords = 0;
-        let offset = '';
-        let isLoading = true; 
-        let rowContainsTerm = false; 
-        let techniciansWithRecords = new Set(); 
-        let currentCheckbox = null; 
-        let currentRecordId = null;  
-        let totalRecords = 0; 
+let records = [];
+let fetchedRecords = 0;
+let totalIncompleteRecords = 0;
+let offset = '';
+let isLoading = false; 
+let techniciansWithRecords = new Set(); 
+let currentCheckbox = null; 
+let currentRecordId = null;  
+let totalRecords = 0;
 
-        const fieldsToFetch = [
+const fieldsToFetch = [
   'ID Number',
   'static Vanir Office',
   'Job Name',
@@ -19,8 +18,6 @@
 ];
 
 document.addEventListener("DOMContentLoaded", async function () {
-
-    const storedTech = localStorage.getItem('fieldTech');
     const displayNameElement = document.getElementById('displayName');
     const techDropdown = document.getElementById('techDropdown'); 
     const searchBar = document.getElementById('searchBar'); 
@@ -29,339 +26,151 @@ document.addEventListener("DOMContentLoaded", async function () {
     const airtableTableName = 'tblO72Aw6qplOEAhR';
     const airtableEndpoint = `https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`;
     axios.defaults.headers.common['Authorization'] = `Bearer ${airtableApiKey}`;
-
-    // Disable the dropdown initially while loading
     const cacheTime = 24 * 60 * 60 * 1000; 
     const lastFetch = localStorage.getItem('lastTechFetchTime');
     const currentTime = new Date().getTime();
 
-    // Function to hide search bar if less than 6 records
-    function toggleSearchBarVisibility(records) {
-        if (records.length < 6) {
-            searchBar.style.display = 'none';  // Hide the search bar if there are less than 6 records
-        } else {
-            searchBar.style.display = 'block';  // Show the search bar if there are 6 or more records
-        }
+    function toggleSearchBarVisibility(recordCount) {
+        searchBar.style.display = recordCount < 6 ? 'none' : 'block';
     }
 
-    async function reloadTableForSelection(selectedTech) {
-    // Clear previous state
-    records = [];
-    fetchedRecords = 0;
-    totalIncompleteRecords = 0;
-    offset = '';
-    // Clear table UI
-    document.getElementById('records').innerHTML = '';
-    // Fetch
-    if (selectedTech === "all" || !selectedTech) {
-        await fetchAllIncompleteRecords();
-    } else {
-        await fetchRecordsForTech(selectedTech);
-    }
-    hideFieldTechnicianColumnIfMatches();
-}
-
-
-    // Function to handle search input and filter table rows
-function filterTable() {
-    const searchTerm = searchBar.value.toLowerCase(); // Get the search term and convert to lowercase
-    const recordsTable = document.querySelector('#records'); // Correct selector
-    const rows = recordsTable.getElementsByTagName('tr'); // Get all rows of the table
-
-    // Loop through all rows except the first one (which is the table header)
-    for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-
-        // Loop through each cell in the row
-        const cells = row.getElementsByTagName('td');
-        for (let j = 0; j < cells.length; j++) {
-            const cellText = cells[j].textContent.toLowerCase(); // Get the cell's text and convert to lowercase
-            if (cellText.includes(searchTerm)) { // Check if cell contains the search term
-                rowContainsTerm = true; // Set flag to true if term is found
-                break; // Exit the loop since we only need one match per row
+    // --- Search bar filtering ---
+    searchBar.addEventListener('input', function() {
+        const searchTerm = searchBar.value.toLowerCase();
+        const recordsTable = document.querySelector('#records');
+        const rows = recordsTable.getElementsByTagName('tr');
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            let rowContainsTerm = false;
+            const cells = row.getElementsByTagName('td');
+            for (let j = 0; j < cells.length; j++) {
+                const cellText = cells[j].textContent.toLowerCase();
+                if (cellText.includes(searchTerm)) {
+                    rowContainsTerm = true;
+                    break;
+                }
             }
-        }
-
-        // Show or hide the row based on whether it contains the search term
-        row.style.display = rowContainsTerm ? '' : 'none';
-    }
-}
-
-// Add an event listener for the search bar input event
-searchBar.addEventListener('input', filterTable);
-
- // Function to display a message when user interacts with the dropdown during loading
-    function showLoadingMessage() {
-        if (isLoading) {
-        }
-    }
-       // Add a listener to prevent dropdown interaction during loading
-       techDropdown.addEventListener('click', showLoadingMessage);
-
-    async function fetchAndDisplayRecords() {
-        const recordsTableBody = document.querySelector('#records tbody');
-        if (!recordsTableBody) {
-            console.error("Error: The #records tbody element does not exist in the DOM.");
-            return;
-        }
-    
-        if (isLoading) return; // Prevent multiple concurrent fetches
-        isLoading = true;
-    
-        try {
-            showLoadingBar();  // Show the loading bar after 3 seconds
-    
-const params = new URLSearchParams();
-fieldsToFetch.forEach(f => params.append('fields[]', f));
-params.append('filterByFormula', "AND(NOT({Field Tech Confirmed Job Complete}), {VPO Status} = 'Awaiting Field Tech Complete Confirmation')");
-params.append('offset', offset);
-params.append('pageSize', 20);
-
-const response = await axios.get(`${airtableEndpoint}?${params.toString()}`);
-            const pageRecords = response.data.records;
-            offset = response.data.offset || '';  // Update the offset for the next batch
-            pageRecords.forEach((record, index) => {
-                // Append records to the table
-                const recordRow = document.createElement('tr');
-                recordRow.innerHTML = `
-                    <td>${record.fields['ID Number'] || ''}</td>
-                    <td>${record.fields['static Vanir Office'] || ''}</td>
-                    <td>${record.fields['Job Name'] || ''}</td>
-                    <td>${record.fields['Description of Work'] || ''}</td>
-                    <td>${record.fields['static Field Technician'] || ''}</td>
-                    <td>${record.fields['Field Tech Confirmed Job Complete'] ? 'Yes' : 'No'}</td>
-                `;
-                recordsTableBody.appendChild(recordRow);
-    
-                // Increment fetched records and update the loading bar
-                fetchedRecords++;
-                updateLoadingBar(fetchedRecords, totalRecords); // Update after each record
-            });
-    
-            hideLoadingBar();  // Hide the loading bar when fetching and rendering is done
-        } catch (error) {
-            console.error('Error fetching records:', error);
-            hideLoadingBar();  // Hide the loading bar in case of an error
-        } finally {
-            isLoading = false;
-        }
-    }
-    
-    // Lazy load on scroll
-    window.addEventListener('scroll', () => {
-        // Check if the user has scrolled to the bottom of the page
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
-            // Load more records if we have an offset (i.e., there are more records to load)
-            if (offset) {
-                fetchAndDisplayRecords();
-            } else {
-            }
+            row.style.display = rowContainsTerm ? '' : 'none';
         }
     });
-    
 
-
-    // Fetch unique technician names with at least one incomplete record from Airtable
+    // --- Dropdown population and dedupe ---
     async function fetchTechniciansWithRecords() {
+        offset = '';
+        techniciansWithRecords = new Set();
         try {
-
-            // Fetch all records
             do {
                 const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
-                const records = response.data.records;
-
-                // Process each record and add the technician name if they have a record
-                records.forEach(record => {
+                const pageRecords = response.data.records;
+                pageRecords.forEach(record => {
                     const techName = record.fields['static Field Technician'];
                     const isJobComplete = record.fields['Field Tech Confirmed Job Complete'];
-                    if (techName && !isJobComplete) {  // Only include technicians with incomplete jobs
-                        techniciansWithRecords.add(techName); // Add technician name to the Set
+                    if (techName && !isJobComplete) {
+                        techniciansWithRecords.add(techName);
                     }
                 });
-
-                offset = response.data.offset || ''; // Move to the next page of results
+                offset = response.data.offset || '';
             } while (offset);
-
-            return Array.from(techniciansWithRecords).sort(); // Convert the Set to an Array and sort alphabetically
+            return Array.from(techniciansWithRecords).sort();
         } catch (error) {
             console.error('Error fetching technicians:', error);
             return [];
         }
     }
-      // Function to hide search bar if less than 6 records
-      function toggleSearchBarVisibility(recordsCount) {
-        searchBar.style.display = recordsCount < 6 ? 'none' : 'block';
-    }
-        
-    async function populateDropdown() {
-        
-        const cachedTechnicians = JSON.parse(localStorage.getItem('technicians'));
-    
-        // If cached technicians exist, load them into the dropdown first
-        if (cachedTechnicians && cachedTechnicians.length > 0) {
-            populateDropdownFromCache(cachedTechnicians);
-            console.log('Dropdown populated from cache');
-        }
-    
-        // Check cache expiration or if no cache is available
-        if (!cachedTechnicians || !lastFetch || currentTime - lastFetch > cacheTime) {
-            // Immediately fetch fresh technician names from Airtable if the cache is empty or expired
-            const technicians = await fetchTechniciansWithRecords();
-            localStorage.setItem('technicians', JSON.stringify(technicians));
-            localStorage.setItem('lastTechFetchTime', currentTime.toString());
-    
-            // Update dropdown after fetching new data
-            populateDropdownFromCache(technicians);
-            console.log('Dropdown updated with fresh data');
-        }
-    
-        // Automatically trigger the record fetching for the default selection
-        const storedTech = localStorage.getItem('fieldTech');
-        if (storedTech === "all" || !storedTech) {
-            fetchAllIncompleteRecords(); // Fetch all records if "all" or no tech is selected
-        } else {
-            fetchRecordsForTech(storedTech); // Fetch records for the stored technician
-        }
-    
-    }
-    
+
     function populateDropdownFromCache(technicians) {
+        const uniqueTechs = Array.from(new Set(technicians.filter(Boolean)));
         const previouslySelectedTech = localStorage.getItem('fieldTech') || '';
-    
         techDropdown.innerHTML = `
             <option value="">Select a Technician</option>
             <option value="all">Display All</option>
         `;
-    
-        technicians.forEach(tech => {
+        uniqueTechs.forEach(tech => {
             const option = document.createElement('option');
             option.value = tech;
             option.innerText = tech;
             techDropdown.appendChild(option);
         });
-    
-        // Set the dropdown to the previously selected technician
         if (previouslySelectedTech) {
             techDropdown.value = previouslySelectedTech;
         }
     }
-    
-    // Call populateDropdown immediately when DOM is ready
-document.addEventListener("DOMContentLoaded", async function () {
-    await populateDropdown();
-    const storedTech = localStorage.getItem('fieldTech') || "all";
-    await reloadTableForSelection(storedTech);
-});
 
+    async function populateDropdown() {
+        const cachedTechnicians = JSON.parse(localStorage.getItem('technicians'));
+        let technicians = [];
+        if (cachedTechnicians && cachedTechnicians.length > 0) {
+            populateDropdownFromCache(cachedTechnicians);
+        }
+        if (!cachedTechnicians || !lastFetch || currentTime - lastFetch > cacheTime) {
+            technicians = await fetchTechniciansWithRecords();
+            localStorage.setItem('technicians', JSON.stringify(technicians));
+            localStorage.setItem('lastTechFetchTime', currentTime.toString());
+            populateDropdownFromCache(technicians);
+        }
+    }
 
-    
- // Define the fetchAllIncompleteRecords function
-async function fetchAllIncompleteRecords() {
-    try {
-        // Step 1: Calculate total number of incomplete records
-        do {
-            const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
-            const incompleteRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
-            totalIncompleteRecords += incompleteRecords.length; // Count only incomplete records
-            offset = response.data.offset || ''; // Move to the next page of results
-        } while (offset);
-
-
-        // Reset the offset to start fetching records
+    // --- Fetch records ---
+    async function fetchAllIncompleteRecords() {
+        records = [];
+        fetchedRecords = 0;
         offset = '';
-
-        // Step 2: Fetch records and update the loading bar
-        do {
-            const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
-            const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
-                .map(record => ({
-                    id: record.id,
-                    fields: record.fields,
-                    descriptionOfWork: record.fields['Description of Work']
-                }));
-
-            records = records.concat(pageRecords);
-            fetchedRecords += pageRecords.length;
-
-            // Update the loading bar with current progress
-
-            offset = response.data.offset || ''; // Move to the next page of results
-            console.log(`Fetched ${fetchedRecords} records so far.`);
-        } while (offset);
-
-        // Populate the table with the fetched records
-        displayRecordsWithFadeIn(records); // Display records with fade-in effect
-
-        // Hide or show the search bar based on the number of records
-        toggleSearchBarVisibility(records.length); // Hide search bar if fewer than 6 records
-
-        console.log(`Fetched ${records.length} incomplete records.`);
-    } catch (error) {
-        console.error('Error fetching all incomplete records:', error);
-    } finally {
+        totalIncompleteRecords = 0;
+        try {
+            do {
+                const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
+                const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
+                    .map(record => ({
+                        id: record.id,
+                        fields: record.fields,
+                        descriptionOfWork: record.fields['Description of Work']
+                    }));
+                records = records.concat(pageRecords);
+                fetchedRecords += pageRecords.length;
+                offset = response.data.offset || '';
+            } while (offset);
+            displayRecordsWithFadeIn(records);
+            toggleSearchBarVisibility(records.length);
+        } catch (error) {
+            console.error('Error fetching all incomplete records:', error);
+        }
     }
-}
 
-// Fetch records for a selected technician
-async function fetchRecordsForTech(fieldTech) {
-    try {
-
-     
-        // Step 1: Calculate total number of incomplete records for the selected technician
-        console.log(`Calculating total number of incomplete records for ${fieldTech}...`);
-        const filterByFormula = `SEARCH("${fieldTech}", {static Field Technician})`;
-        do {
-            const response = await axios.get(`${airtableEndpoint}?filterByFormula=${encodeURIComponent(filterByFormula)}&offset=${offset}`);
-            const incompleteRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete']);
-            totalIncompleteRecords += incompleteRecords.length; // Count only incomplete records
-            offset = response.data.offset || ''; // Move to the next page of results
-        } while (offset);
-        
-        // Step 2: Fetch records and update the loading bar
-        offset = ''; // Reset the offset to fetch records again
-        do {
-            const response = await axios.get(`${airtableEndpoint}?filterByFormula=${encodeURIComponent(filterByFormula)}&offset=${offset}`);
-            const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
-                .map(record => ({
-                    id: record.id,
-                    fields: record.fields,
-                    descriptionOfWork: record.fields['Description of Work']
-                }));
-            records = records.concat(pageRecords);
-            fetchedRecords += pageRecords.length;
-
-            // Update the loading bar based on the percentage of records fetched
-    
-            offset = response.data.offset || ''; // Move to the next page of results
-            console.log(`Fetched ${fetchedRecords} records so far.`);
-        } while (offset);
-
-    
-        toggleSearchBarVisibility(records); // Hide search bar if fewer than 6 records
-        displayRecordsWithFadeIn(records); // Display the selected technician's records with fade-in effect
-        
-        // Call hideFieldTechnicianColumnIfMatches after populating the records
-        hideFieldTechnicianColumnIfMatches();
-    
-    } catch (error) {
-        console.error(`Error fetching records for technician ${fieldTech}:`, error);
-    } finally {
+    async function fetchRecordsForTech(fieldTech) {
+        records = [];
+        fetchedRecords = 0;
+        offset = '';
+        totalIncompleteRecords = 0;
+        try {
+            const filterByFormula = `SEARCH("${fieldTech}", {static Field Technician})`;
+            do {
+                const response = await axios.get(`${airtableEndpoint}?filterByFormula=${encodeURIComponent(filterByFormula)}&offset=${offset}`);
+                const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
+                    .map(record => ({
+                        id: record.id,
+                        fields: record.fields,
+                        descriptionOfWork: record.fields['Description of Work']
+                    }));
+                records = records.concat(pageRecords);
+                fetchedRecords += pageRecords.length;
+                offset = response.data.offset || '';
+            } while (offset);
+            displayRecordsWithFadeIn(records);
+            toggleSearchBarVisibility(records.length);
+            hideFieldTechnicianColumnIfMatches();
+        } catch (error) {
+            console.error(`Error fetching records for technician ${fieldTech}:`, error);
+        }
     }
-}
 
-    // Function to display records with fade-in effect
     function displayRecordsWithFadeIn(records) {
-        console.log('Displaying records...');
         const recordsContainer = document.getElementById('records');
         recordsContainer.innerHTML = '';
-
         if (records.length === 0) {
             recordsContainer.innerText = 'No records found.';
             return;
         }
-
         records = sortRecordsWithSpecialCondition(records);
-
         const tableHeader = `
             <thead>
                 <tr>
@@ -377,42 +186,28 @@ async function fetchRecordsForTech(fieldTech) {
         `;
         recordsContainer.innerHTML = tableHeader;
         const tableBody = recordsContainer.querySelector('tbody');
-
-        // Use setTimeout to create a fade-in effect for each record
         records.forEach((record, index) => {
             const recordRow = createRecordRow(record);
-            recordRow.style.opacity = 0; // Initially set opacity to 0 for fade-in effect
-
+            recordRow.style.opacity = 0;
             setTimeout(() => {
-                recordRow.style.opacity = 1; // Fade-in effect
-                recordRow.style.transition = 'opacity 0.5s'; // Apply CSS transition for smooth fade-in
-            }, index * 100); // Delay each row by 100ms
-
+                recordRow.style.opacity = 1;
+                recordRow.style.transition = 'opacity 0.5s';
+            }, index * 100);
             tableBody.appendChild(recordRow);
         });
-
-        console.log(`Total number of entries displayed: ${records.length}`);
     }
 
     function sortRecordsWithSpecialCondition(records) {
         return records.sort((a, b) => {
-            const idA = a.fields['ID Number'] || ''; // Fetch the ID Number field from record A
-            const idB = b.fields['ID Number'] || ''; // Fetch the ID Number field from record B
-    
-            // If ID Numbers are numeric, compare numerically
+            const idA = a.fields['ID Number'] || '';
+            const idB = b.fields['ID Number'] || '';
             const numA = parseInt(idA, 10);
             const numB = parseInt(idB, 10);
-    
-            // If both IDs are valid numbers, sort numerically
-            if (!isNaN(numA) && !isNaN(numB)) {
-                return numA - numB;
-            }
-    
-            // If IDs are not numbers or not comparable numerically, fall back to lexicographical sort
+            if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
             return idA.localeCompare(idB);
         });
     }
-    
+
     function createRecordRow(record) {
         const recordRow = document.createElement('tr');
         const IDNumber = record.fields['ID Number'] || '';
@@ -422,7 +217,6 @@ async function fetchRecordsForTech(fieldTech) {
         const fieldTechConfirmedComplete = record.fields['Field Tech Confirmed Job Complete'];
         const checkboxValue = fieldTechConfirmedComplete ? 'checked' : '';
         const descriptionOfWork = record.descriptionOfWork || '';
-
         recordRow.innerHTML = `
             <td>${IDNumber}</td>
             <td>${vanirOffice}</td>
@@ -436,172 +230,105 @@ async function fetchRecordsForTech(fieldTech) {
                 </label>
             </td>
         `;
-
         const checkbox = recordRow.querySelector('input[type="checkbox"]');
         checkbox.addEventListener('click', handleCheckboxClick);
-
         return recordRow;
     }
-    const modal = document.getElementById('modal');  // Reference the modal element
-    const yesButton = document.getElementById('yesButton');
-    const noButton = document.getElementById('noButton');
-    
+
+    // --- Hide field tech/branch column ---
     function hideFieldTechnicianColumnIfMatches() {
-        const selectedTech = techDropdown.value; // Get the selected technician from the dropdown
-        const rows = document.querySelectorAll('#records tbody tr'); // Get all table rows
-    
-        // Get the "Field Technician" and "Branch" headers and cells
+        const selectedTech = techDropdown.value;
         const fieldTechHeader = document.querySelector('th:nth-child(5)');
         const branchHeader = document.querySelector('th:nth-child(2)');
         const fieldTechCells = document.querySelectorAll('td:nth-child(5)');
         const branchCells = document.querySelectorAll('td:nth-child(2)');
-    
-        // If "all" is selected, show both "Field Technician" and "Branch" columns
+        if (!fieldTechHeader || !branchHeader) return;
         if (selectedTech === "all") {
-            fieldTechHeader.style.display = ''; // Show the Field Technician header
-            fieldTechCells.forEach(cell => {
-                cell.style.display = ''; // Show each Field Technician cell in the column
-            });
-            
-            branchHeader.style.display = ''; // Show the Branch header
-            branchCells.forEach(cell => {
-                cell.style.display = ''; // Show each Branch cell in the column
-            });
+            fieldTechHeader.style.display = '';
+            fieldTechCells.forEach(cell => { cell.style.display = ''; });
+            branchHeader.style.display = '';
+            branchCells.forEach(cell => { cell.style.display = ''; });
         } else {
-            // Hide both "Field Technician" and "Branch" columns when a specific technician is selected
-            fieldTechHeader.style.display = 'none'; // Hide the Field Technician header
-            fieldTechCells.forEach(cell => {
-                cell.style.display = 'none'; // Hide each Field Technician cell in the column
-            });
-    
-            branchHeader.style.display = 'none'; // Hide the Branch header
-            branchCells.forEach(cell => {
-                cell.style.display = 'none'; // Hide each Branch cell in the column
-            });
+            fieldTechHeader.style.display = 'none';
+            fieldTechCells.forEach(cell => { cell.style.display = 'none'; });
+            branchHeader.style.display = 'none';
+            branchCells.forEach(cell => { cell.style.display = 'none'; });
         }
     }
-    
-    // Call the function when the dropdown changes
-// Handle dropdown change event
-techDropdown.addEventListener('change', async () => {
-    const selectedTech = techDropdown.value;
-    localStorage.setItem('fieldTech', selectedTech || "all");
-    displayNameElement.innerText = selectedTech && selectedTech !== "all" ? `Logged in as: ${selectedTech}` : '';
-    await reloadTableForSelection(selectedTech);
-});
 
-    
-    // Call the function on page load to hide/show the columns based on the current selection
-    document.addEventListener("DOMContentLoaded", () => {
-        hideFieldTechnicianColumnIfMatches();
-    });
-        
-    // Function to handle checkbox click event
+    // --- Checkbox/modal logic ---
+    const modal = document.getElementById('modal');
+    const yesButton = document.getElementById('yesButton');
+    const noButton = document.getElementById('noButton');
+
     function handleCheckboxClick(event) {
-        currentCheckbox = event.target;  // Assign current checkbox globally
+        currentCheckbox = event.target;
         currentRecordId = currentCheckbox.getAttribute('data-record-id');
         const isChecked = currentCheckbox.checked;
         const initialChecked = currentCheckbox.getAttribute('data-initial-checked') === 'true';
-    
         if (!isChecked) {
-            // Checkbox was unchecked: immediately submit the update without showing the modal
-            console.log('Checkbox unchecked, submitting update immediately...');
-            submitUpdate(currentRecordId, false); // Uncheck action, no modal
-            modal.style.display = 'none'; // Hide the modal when unchecked
+            submitUpdate(currentRecordId, false);
+            modal.style.display = 'none';
         } else if (!initialChecked && isChecked) {
-            // Checkbox was initially unchecked and is now checked: Show the modal for confirmation
-            console.log('Checkbox checked, showing modal for confirmation...');
-            modal.style.display = 'block'; // Show the modal when checked
+            modal.style.display = 'block';
         }
-    
-        // Update the checkbox's 'data-initial-checked' attribute to its current state after interaction
         currentCheckbox.setAttribute('data-initial-checked', isChecked);
     }
-    
-    // Event listeners for modal buttons
     yesButton.addEventListener('click', () => {
-        submitUpdate(currentRecordId, true);  // Use the globally declared currentRecordId
+        submitUpdate(currentRecordId, true);
         modal.style.display = 'none';
     });
-    
     noButton.addEventListener('click', () => {
-        if (currentCheckbox) {
-            currentCheckbox.checked = false;  // Uncheck the checkbox if "No" is clicked
-        }
+        if (currentCheckbox) currentCheckbox.checked = false;
         modal.style.display = 'none';
     });
-    
+
     async function submitUpdate(recordId, isChecked) {
-        console.log(`Submitting update for record ID ${recordId}...`);
-    
         try {
-            // Send the update to Airtable
             await axios.patch(`${airtableEndpoint}/${recordId}`, {
                 fields: {
                     'Field Tech Confirmed Job Complete': isChecked,
                     'Field Tech Confirmed Job Completed Date': isChecked ? new Date().toISOString() : null
                 }
             });
-    
-            if (isChecked) {
-                // Only show alert if the job is confirmed complete (checked)
-                console.log(`Record ID ${recordId} marked as complete.`);
-                alert(`Record ID ${recordId} updated successfully.`);
-            } else {
-                // Log for uncheck, no alert needed
-                console.log(`Record ID ${recordId} marked as incomplete.`);
-            }
-    
-            // Dynamically update the UI instead of reloading
             updateCheckboxUI(recordId, isChecked);
-    
-            // Add page refresh after successful submission
-            location.reload();
-    
+            location.reload(); // Optional: refresh page after
         } catch (error) {
             console.error('Error updating record:', error);
         }
     }
-    
     function updateCheckboxUI(recordId, isChecked) {
-        // Find the checkbox element using the record ID
         const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);
-    
         if (checkbox) {
-            // Update the checkbox state
             checkbox.checked = isChecked;
-    
-            // Optionally update any other UI elements (e.g., change labels or text)
-            const row = checkbox.closest('tr'); // Assuming the checkbox is inside a row
-            const statusCell = row.querySelector('.status-cell'); // Assuming there's a status cell to update
+            const row = checkbox.closest('tr');
+            const statusCell = row.querySelector('.status-cell');
             if (statusCell) {
                 statusCell.textContent = isChecked ? 'Complete' : 'Incomplete';
             }
         }
     }
-    
-     // Handle dropdown change event
-     techDropdown.addEventListener('change', () => {
+
+    // --- Only one dropdown change listener! ---
+    techDropdown.addEventListener('change', async () => {
         const selectedTech = techDropdown.value;
-        if (selectedTech === "all") {
-            fetchAllIncompleteRecords(); // Fetch and display all incomplete records
-        } else if (selectedTech) {
-            localStorage.setItem('fieldTech', selectedTech);
-            displayNameElement.innerText = `Logged in as: ${selectedTech}`;
-            fetchRecordsForTech(selectedTech); // Re-fetch records for the selected technician
+        localStorage.setItem('fieldTech', selectedTech || "all");
+        displayNameElement.innerText = selectedTech && selectedTech !== "all" ? `Logged in as: ${selectedTech}` : '';
+        if (selectedTech === "all" || !selectedTech) {
+            await fetchAllIncompleteRecords();
+        } else {
+            await fetchRecordsForTech(selectedTech);
         }
-        hideFieldTechnicianColumnIfMatches(); // Check and hide the Field Technician column if applicable
+        hideFieldTechnicianColumnIfMatches();
     });
-    
-    // Populate dropdown with unique technician names on page load
-    await populateDropdown(); // Populate the dropdown and show loading bar until done
 
-    await fetchAndDisplayRecords();
-
-    // Fetch records for the logged-in technician on page load if available
-    if (storedTech && storedTech !== "all") {
-        fetchRecordsForTech(storedTech);
-    } else if (storedTech === "all") {
-        fetchAllIncompleteRecords(); // Fetch all incomplete records if "Display All" was previously selected
+    // --- Page load: only fetch once! ---
+    await populateDropdown();
+    const storedTech = localStorage.getItem('fieldTech') || "all";
+    if (storedTech === "all" || !storedTech) {
+        await fetchAllIncompleteRecords();
+    } else {
+        await fetchRecordsForTech(storedTech);
     }
+    hideFieldTechnicianColumnIfMatches();
 });
