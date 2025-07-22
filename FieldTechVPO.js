@@ -220,32 +220,48 @@ async function fetchRecordsForTech(fieldTech) {
         });
     }
 
-    function createRecordRow(record) {
-        const recordRow = document.createElement('tr');
-        const IDNumber = record.fields['ID Number'] || '';
-        const vanirOffice = record.fields['static Vanir Office'] || '';
-        const jobName = record.fields['Job Name'] || '';
-        const fieldTechnician = record.fields['static Field Technician'] || '';
-        const fieldTechConfirmedComplete = record.fields['Field Tech Confirmed Job Complete'];
-        const checkboxValue = fieldTechConfirmedComplete ? 'checked' : '';
-        const descriptionOfWork = record.descriptionOfWork || '';
-        recordRow.innerHTML = `
-            <td>${IDNumber}</td>
-            <td>${vanirOffice}</td>
-            <td>${jobName}</td>
-            <td>${descriptionOfWork}</td>
-            <td>${fieldTechnician}</td>
-            <td>
-                <label class="custom-checkbox">
-                    <input type="checkbox" ${checkboxValue} data-record-id="${record.id}" data-initial-checked="${checkboxValue}">
-                    <span class="checkmark"></span>
-                </label>
-            </td>
-        `;
-        const checkbox = recordRow.querySelector('input[type="checkbox"]');
-        checkbox.addEventListener('click', handleCheckboxClick);
-        return recordRow;
-    }
+function createRecordRow(record) {
+    const recordRow = document.createElement('tr');
+    const IDNumber = record.fields['ID Number'] || '';
+    const vanirOffice = record.fields['static Vanir Office'] || '';
+    const jobName = record.fields['Job Name'] || '';
+    const fieldTechnician = record.fields['static Field Technician'] || '';
+    const fieldTechConfirmedComplete = record.fields['Field Tech Confirmed Job Complete'];
+    const checkboxValue = fieldTechConfirmedComplete ? 'checked' : '';
+    const descriptionOfWork = record.descriptionOfWork || '';
+
+    recordRow.innerHTML = `
+        <td>${IDNumber}</td>
+        <td>${vanirOffice}</td>
+        <td>${jobName}</td>
+        <td>${descriptionOfWork}</td>
+        <td>${fieldTechnician}</td>
+        <td class="completed-cell" style="cursor: pointer;">
+            <label class="custom-checkbox" style="width:100%;height:100%;display:block;">
+                <input type="checkbox" ${checkboxValue} data-record-id="${record.id}" data-initial-checked="${checkboxValue}">
+                <span class="checkmark"></span>
+            </label>
+        </td>
+    `;
+
+    // Get references to checkbox and completed cell
+    const completedTd = recordRow.querySelector('td.completed-cell');
+    const checkbox = completedTd.querySelector('input[type="checkbox"]');
+
+    // Handler for clicking anywhere in the cell
+    completedTd.addEventListener('click', function(e) {
+        // Only trigger if not already clicking the checkbox itself
+        if (e.target !== checkbox) {
+            checkbox.click();
+        }
+    });
+
+    // Handler for checkbox itself (modal logic etc)
+    checkbox.addEventListener('click', handleCheckboxClick);
+
+    return recordRow;
+}
+
 
     // --- Hide field tech/branch column ---
     function hideFieldTechnicianColumnIfMatches() {

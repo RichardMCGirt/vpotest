@@ -221,6 +221,10 @@ tr:nth-child(odd) {
         font-size: 12px;
     }
 }
+.completed-cell {
+  cursor: pointer;
+}
+
 
 #loadingOverlay {
   display: none;
