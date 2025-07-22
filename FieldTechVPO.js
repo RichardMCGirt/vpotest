@@ -16,6 +16,12 @@ const fieldsToFetch = [
   'static Field Technician',
   'Field Tech Confirmed Job Complete'
 ];
+function showLoadingOverlay() {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+function hideLoadingOverlay() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
 
 document.addEventListener("DOMContentLoaded", async function () {
     const displayNameElement = document.getElementById('displayName');
@@ -111,57 +117,63 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     // --- Fetch records ---
-    async function fetchAllIncompleteRecords() {
-        records = [];
-        fetchedRecords = 0;
-        offset = '';
-        totalIncompleteRecords = 0;
-        try {
-            do {
-                const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
-                const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
-                    .map(record => ({
-                        id: record.id,
-                        fields: record.fields,
-                        descriptionOfWork: record.fields['Description of Work']
-                    }));
-                records = records.concat(pageRecords);
-                fetchedRecords += pageRecords.length;
-                offset = response.data.offset || '';
-            } while (offset);
-            displayRecordsWithFadeIn(records);
-            toggleSearchBarVisibility(records.length);
-        } catch (error) {
-            console.error('Error fetching all incomplete records:', error);
-        }
+async function fetchAllIncompleteRecords() {
+    showLoadingOverlay(); // <--- SHOW
+    records = [];
+    fetchedRecords = 0;
+    offset = '';
+    totalIncompleteRecords = 0;
+    try {
+        do {
+            const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
+            const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
+                .map(record => ({
+                    id: record.id,
+                    fields: record.fields,
+                    descriptionOfWork: record.fields['Description of Work']
+                }));
+            records = records.concat(pageRecords);
+            fetchedRecords += pageRecords.length;
+            offset = response.data.offset || '';
+        } while (offset);
+        displayRecordsWithFadeIn(records);
+        toggleSearchBarVisibility(records.length);
+    } catch (error) {
+        console.error('Error fetching all incomplete records:', error);
+    } finally {
+        hideLoadingOverlay(); // <--- HIDE
     }
+}
 
-    async function fetchRecordsForTech(fieldTech) {
-        records = [];
-        fetchedRecords = 0;
-        offset = '';
-        totalIncompleteRecords = 0;
-        try {
-            const filterByFormula = `SEARCH("${fieldTech}", {static Field Technician})`;
-            do {
-                const response = await axios.get(`${airtableEndpoint}?filterByFormula=${encodeURIComponent(filterByFormula)}&offset=${offset}`);
-                const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
-                    .map(record => ({
-                        id: record.id,
-                        fields: record.fields,
-                        descriptionOfWork: record.fields['Description of Work']
-                    }));
-                records = records.concat(pageRecords);
-                fetchedRecords += pageRecords.length;
-                offset = response.data.offset || '';
-            } while (offset);
-            displayRecordsWithFadeIn(records);
-            toggleSearchBarVisibility(records.length);
-            hideFieldTechnicianColumnIfMatches();
-        } catch (error) {
-            console.error(`Error fetching records for technician ${fieldTech}:`, error);
-        }
+async function fetchRecordsForTech(fieldTech) {
+    showLoadingOverlay();
+    records = [];
+    fetchedRecords = 0;
+    offset = '';
+    totalIncompleteRecords = 0;
+    try {
+        const filterByFormula = `SEARCH("${fieldTech}", {static Field Technician})`;
+        do {
+            const response = await axios.get(`${airtableEndpoint}?filterByFormula=${encodeURIComponent(filterByFormula)}&offset=${offset}`);
+            const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
+                .map(record => ({
+                    id: record.id,
+                    fields: record.fields,
+                    descriptionOfWork: record.fields['Description of Work']
+                }));
+            records = records.concat(pageRecords);
+            fetchedRecords += pageRecords.length;
+            offset = response.data.offset || '';
+        } while (offset);
+        displayRecordsWithFadeIn(records);
+        toggleSearchBarVisibility(records.length);
+        hideFieldTechnicianColumnIfMatches();
+    } catch (error) {
+        console.error(`Error fetching records for technician ${fieldTech}:`, error);
+    } finally {
+        hideLoadingOverlay();
     }
+}
 
     function displayRecordsWithFadeIn(records) {
         const recordsContainer = document.getElementById('records');
