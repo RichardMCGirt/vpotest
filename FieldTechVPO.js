@@ -7,6 +7,8 @@ let techniciansWithRecords = new Set();
 let currentCheckbox = null; 
 let currentRecordId = null;  
 let totalRecords = 0;
+let isFetching = false;
+let currentSearchTerm = '';
 
 const fieldsToFetch = [
   'ID Number',
@@ -41,24 +43,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     // --- Search bar filtering ---
-    searchBar.addEventListener('input', function() {
-        const searchTerm = searchBar.value.toLowerCase();
-        const recordsTable = document.querySelector('#records');
-        const rows = recordsTable.getElementsByTagName('tr');
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            let rowContainsTerm = false;
-            const cells = row.getElementsByTagName('td');
-            for (let j = 0; j < cells.length; j++) {
-                const cellText = cells[j].textContent.toLowerCase();
-                if (cellText.includes(searchTerm)) {
-                    rowContainsTerm = true;
-                    break;
-                }
-            }
-            row.style.display = rowContainsTerm ? '' : 'none';
-        }
-    });
+   searchBar.addEventListener('input', function() {
+    currentSearchTerm = searchBar.value.toLowerCase();
+    renderTableFromRecords();
+});
+
+
 
     // --- Dropdown population and dedupe ---
     async function fetchTechniciansWithRecords() {
@@ -118,11 +108,13 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     // --- Fetch records ---
 async function fetchAllIncompleteRecords() {
-    showLoadingOverlay(); // <--- SHOW
+    showLoadingOverlay();
     records = [];
     fetchedRecords = 0;
     offset = '';
     totalIncompleteRecords = 0;
+    isFetching = true;
+    renderTableFromRecords(); // Initial empty
     try {
         do {
             const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
@@ -135,14 +127,80 @@ async function fetchAllIncompleteRecords() {
             records = records.concat(pageRecords);
             fetchedRecords += pageRecords.length;
             offset = response.data.offset || '';
+            renderTableFromRecords(); // Update table after each page
         } while (offset);
-        displayRecordsWithFadeIn(records);
-        toggleSearchBarVisibility(records.length);
     } catch (error) {
         console.error('Error fetching all incomplete records:', error);
     } finally {
-        hideLoadingOverlay(); // <--- HIDE
+        isFetching = false;
+        hideLoadingOverlay();
+        renderTableFromRecords(); // Final update to show all fetched
     }
+}
+
+function renderTableFromRecords() {
+    const recordsContainer = document.getElementById('records');
+    let filteredRecords = records;
+
+    if (currentSearchTerm) {
+        filteredRecords = records.filter(record =>
+            Object.values(record.fields).some(val =>
+                (val + '').toLowerCase().includes(currentSearchTerm)
+            ) ||
+            (record.descriptionOfWork || '').toLowerCase().includes(currentSearchTerm)
+        );
+    }
+
+    if (filteredRecords.length === 0) {
+        // Show warning if still loading
+        let warning = document.getElementById('search-warning');
+        if (!warning) {
+            warning = document.createElement('div');
+            warning.id = 'search-warning';
+            warning.style.color = 'orange';
+            warning.style.margin = '1em 0';
+            searchBar.parentNode.insertBefore(warning, searchBar.nextSibling);
+        }
+        if (isFetching) {
+            warning.innerText = 'No matching records found so far. Still loading more—please try again shortly.';
+            warning.style.display = '';
+        } else {
+            warning.innerText = 'No matching records found so far. Still loading more—please try again shortly.';
+            warning.style.display = '';
+        }
+        recordsContainer.innerHTML = '';
+        return;
+    } else {
+        const warning = document.getElementById('search-warning');
+        if (warning) warning.style.display = 'none';
+    }
+
+    // Build table as before, but from filteredRecords
+    filteredRecords = sortRecordsWithSpecialCondition(filteredRecords);
+    const tableHeader = `
+        <thead>
+            <tr>
+                <th style="width: 8%;">ID Number</th>
+                <th>Branch</th>
+                <th>Job Name</th>
+                <th>Description of Work</th>
+                <th>Field Technician</th>
+                <th style="width: 13%;">Completed</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    `;
+    recordsContainer.innerHTML = tableHeader;
+    const tableBody = recordsContainer.querySelector('tbody');
+    filteredRecords.forEach((record, index) => {
+        const recordRow = createRecordRow(record);
+        recordRow.style.opacity = 0;
+        setTimeout(() => {
+            recordRow.style.opacity = 1;
+            recordRow.style.transition = 'opacity 0.5s';
+        }, index * 100);
+        tableBody.appendChild(recordRow);
+    });
 }
 
 async function fetchRecordsForTech(fieldTech) {
@@ -165,7 +223,7 @@ async function fetchRecordsForTech(fieldTech) {
             fetchedRecords += pageRecords.length;
             offset = response.data.offset || '';
         } while (offset);
-        displayRecordsWithFadeIn(records);
+        renderTableFromRecords()(records);
         toggleSearchBarVisibility(records.length);
         hideFieldTechnicianColumnIfMatches();
     } catch (error) {
@@ -174,40 +232,6 @@ async function fetchRecordsForTech(fieldTech) {
         hideLoadingOverlay();
     }
 }
-
-    function displayRecordsWithFadeIn(records) {
-        const recordsContainer = document.getElementById('records');
-        recordsContainer.innerHTML = '';
-        if (records.length === 0) {
-            recordsContainer.innerText = 'No records found.';
-            return;
-        }
-        records = sortRecordsWithSpecialCondition(records);
-        const tableHeader = `
-            <thead>
-                <tr>
-                    <th style="width: 8%;">ID Number</th>
-                    <th>Branch</th>
-                    <th>Job Name</th>
-                    <th>Description of Work</th>
-                    <th>Field Technician</th>
-                    <th style="width: 13%;">Completed</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        `;
-        recordsContainer.innerHTML = tableHeader;
-        const tableBody = recordsContainer.querySelector('tbody');
-        records.forEach((record, index) => {
-            const recordRow = createRecordRow(record);
-            recordRow.style.opacity = 0;
-            setTimeout(() => {
-                recordRow.style.opacity = 1;
-                recordRow.style.transition = 'opacity 0.5s';
-            }, index * 100);
-            tableBody.appendChild(recordRow);
-        });
-    }
 
     function sortRecordsWithSpecialCondition(records) {
         return records.sort((a, b) => {

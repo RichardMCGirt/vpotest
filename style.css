@@ -31,7 +31,7 @@ body {
 .table-container {
     width: 100%;                 /* Full width of parent */
     max-width: 95vw;             /* Responsive max width */
-    max-height: 70vh;            /* Max height for table area */
+    max-height: 90vh;            /* Max height for table area */
     overflow-x: auto;            /* Horizontal scroll for table */
     overflow-y: auto;            /* Vertical scroll for table */
     margin: 5px auto;            /* Top & bottom 5px, left/right auto (centers horizontally) */
