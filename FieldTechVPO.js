@@ -368,9 +368,6 @@ function createRecordRow(record) {
     return recordRow;
 }
 
-
-
-
     // --- Hide field tech/branch column ---
     function hideFieldTechnicianColumnIfMatches() {
         const selectedTech = techDropdown.value;
