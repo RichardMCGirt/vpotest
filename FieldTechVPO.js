@@ -192,6 +192,7 @@ async function fetchAllIncompleteRecords() {
     }
 }
 
+
 function renderTableFromRecords() {
     const recordsContainer = document.getElementById('records');
     let filteredRecords = records;
@@ -206,6 +207,7 @@ function renderTableFromRecords() {
     }
 
     if (filteredRecords.length === 0) {
+        // Show warning if still loading
         let warning = document.getElementById('search-warning');
         if (!warning) {
             warning = document.createElement('div');
@@ -214,9 +216,13 @@ function renderTableFromRecords() {
             warning.style.margin = '1em 0';
             searchBar.parentNode.insertBefore(warning, searchBar.nextSibling);
         }
-        warning.innerText = isFetching
-            ? 'No matching records found so far. Still loading more—please try again shortly.'
-            : 'No matching records found.';
+        if (isFetching) {
+            warning.innerText = 'No matching records found so far. Still loading more—please try again shortly.';
+            warning.style.display = '';
+        } else {
+            warning.innerText = 'No matching records found so far. Still loading more—please try again shortly.';
+            warning.style.display = '';
+        }
         recordsContainer.innerHTML = '';
         return;
     } else {
@@ -224,97 +230,32 @@ function renderTableFromRecords() {
         if (warning) warning.style.display = 'none';
     }
 
-    // ✅ Sort by Branch first if multiple branches exist, then by ID Number
-    const uniqueBranches = [...new Set(filteredRecords.map(r => r.fields['static Vanir Office']).filter(Boolean))];
-    if (uniqueBranches.length > 1) {
-        filteredRecords.sort((a, b) => {
-            const branchA = a.fields['static Vanir Office'] || '';
-            const branchB = b.fields['static Vanir Office'] || '';
-            if (branchA !== branchB) return branchA.localeCompare(branchB);
+    // Build table as before, but from filteredRecords
+  // Build table as before, but from filteredRecords
+filteredRecords = sortRecordsWithSpecialCondition(filteredRecords);
+const tableHeader = `
+    <thead>
+        <tr>
+            <th style="width: 8%;">ID Number</th>
+            <th>Branch</th>
+            <th>Job Name</th>
+            <th>Description of Work</th>
+            <th>Field Technician</th>
+            <th style="width: 13%;">Completed</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+`;
+recordsContainer.innerHTML = tableHeader;
+const tableBody = recordsContainer.querySelector('tbody');
 
-            // fallback: sort by ID Number if same branch
-            const idA = parseInt(a.fields['ID Number'], 10);
-            const idB = parseInt(b.fields['ID Number'], 10);
-            if (!isNaN(idA) && !isNaN(idB)) return idA - idB;
-            return (a.fields['ID Number'] || '').localeCompare(b.fields['ID Number'] || '');
-        });
-    } else {
-        filteredRecords = sortRecordsWithSpecialCondition(filteredRecords);
-    }
+// 🚀 instant row render (no fade-in)
+filteredRecords.forEach((record) => {
+    const recordRow = createRecordRow(record);
+    tableBody.appendChild(recordRow);
+});
 
-    // ✅ Build table (Branch column always in header, but hidden later if needed)
-    const tableHeader = `
-        <thead>
-            <tr>
-                <th style="width: 8%;">ID Number</th>
-                <th class="branch-col">Branch</th>
-                <th>Job Name</th>
-                <th>Description of Work</th>
-                <th>Field Technician</th>
-                <th style="width: 13%;">Completed</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    `;
-    recordsContainer.innerHTML = tableHeader;
-    const tableBody = recordsContainer.querySelector('tbody');
-
-    filteredRecords.forEach((record) => {
-        const recordRow = createRecordRow(record);
-        tableBody.appendChild(recordRow);
-    });
-
-    // ✅ Hide Branch column completely if only one branch
-    const branchHeader = recordsContainer.querySelector('th.branch-col');
-    const branchCells = recordsContainer.querySelectorAll('td.branch-cell');
-    if (uniqueBranches.length <= 1) {
-        branchHeader.style.display = 'none';
-        branchCells.forEach(cell => (cell.style.display = 'none'));
-    } else {
-        branchHeader.style.display = '';
-        branchCells.forEach(cell => (cell.style.display = ''));
-    }
 }
-
-function createRecordRow(record) {
-    const recordRow = document.createElement('tr');
-    const IDNumber = record.fields['ID Number'] || '';
-    const vanirOffice = record.fields['static Vanir Office'] || '';
-    const jobName = record.fields['Job Name'] || '';
-    const fieldTechnician = record.fields['static Field Technician'] || '';
-    const fieldTechConfirmedComplete = record.fields['Field Tech Confirmed Job Complete'];
-    const checkboxValue = fieldTechConfirmedComplete ? 'checked' : '';
-    const descriptionOfWork = record.descriptionOfWork || '';
-
-    recordRow.innerHTML = `
-        <td>${IDNumber}</td>
-        <td class="branch-cell">${vanirOffice}</td>
-        <td>${jobName}</td>
-        <td>${descriptionOfWork}</td>
-        <td>${fieldTechnician}</td>
-        <td class="completed-cell" style="cursor: pointer;">
-            <label class="custom-checkbox" style="width:100%;height:100%;display:block;">
-                <input type="checkbox" ${checkboxValue} data-record-id="${record.id}" data-initial-checked="${checkboxValue}">
-                <span class="checkmark"></span>
-            </label>
-        </td>
-    `;
-
-    const completedTd = recordRow.querySelector('td.completed-cell');
-    const checkbox = completedTd.querySelector('input[type="checkbox"]');
-
-    completedTd.addEventListener('click', function(e) {
-        if (e.target !== checkbox) {
-            checkbox.click();
-        }
-    });
-
-    checkbox.addEventListener('click', handleCheckboxClick);
-
-    return recordRow;
-}
-
-
 
 async function fetchRecordsForTech(fieldTech) {
     showLoadingOverlay();
@@ -394,31 +335,21 @@ function createRecordRow(record) {
         <td>${jobName}</td>
         <td>${descriptionOfWork}</td>
         <td>${fieldTechnician}</td>
-        <td class="completed-cell" style="cursor: pointer;">
-            <label class="custom-checkbox" style="width:100%;height:100%;display:block;">
+        <td class="completed-cell">
+            <label class="custom-checkbox">
                 <input type="checkbox" ${checkboxValue} data-record-id="${record.id}" data-initial-checked="${checkboxValue}">
                 <span class="checkmark"></span>
             </label>
         </td>
     `;
 
-    // Get references to checkbox and completed cell
-    const completedTd = recordRow.querySelector('td.completed-cell');
-    const checkbox = completedTd.querySelector('input[type="checkbox"]');
-
-    // Handler for clicking anywhere in the cell
-    completedTd.addEventListener('click', function(e) {
-        // Only trigger if not already clicking the checkbox itself
-        if (e.target !== checkbox) {
-            checkbox.click();
-        }
-    });
-
-    // Handler for checkbox itself (modal logic etc)
+    // Only attach directly to the checkbox
+    const checkbox = recordRow.querySelector('input[type="checkbox"]');
     checkbox.addEventListener('click', handleCheckboxClick);
 
     return recordRow;
 }
+
 
     // --- Hide field tech/branch column ---
     function hideFieldTechnicianColumnIfMatches() {
@@ -468,8 +399,15 @@ function createRecordRow(record) {
 yesButton.addEventListener('click', () => {
     console.log("✅ Yes clicked, updating record:", currentRecordId);
     submitUpdate(currentRecordId, true);
+
+    // ✅ Show toast notification only here (after confirmation)
+    const recordRow = document.querySelector(`input[data-record-id="${currentRecordId}"]`)?.closest("tr");
+    const jobName = recordRow ? recordRow.querySelector("td:nth-child(3)")?.textContent : `Record ${currentRecordId}`;
+    showToast(`✅ Completed: ${jobName}`);
+
     modal.style.display = 'none';
 });
+
 
 
 // ✅ No button → cancel check and revert UI
@@ -480,7 +418,6 @@ noButton.addEventListener('click', () => {
 
 async function submitUpdate(recordId, isChecked) {
     try {
-        // Patch Airtable record
         await axios.patch(
             `https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${recordId}`,
             {
@@ -496,10 +433,8 @@ async function submitUpdate(recordId, isChecked) {
             }
         );
 
-        // Update checkbox UI
         updateCheckboxUI(recordId, isChecked);
 
-        // Optionally, remove the row from the table if it's completed
         if (isChecked) {
             const row = document.querySelector(`input[data-record-id="${recordId}"]`)?.closest("tr");
             if (row) {
@@ -509,20 +444,17 @@ async function submitUpdate(recordId, isChecked) {
             }
         }
 
-console.log(`✅ Record ${recordId} updated successfully`);
+        console.log(`✅ Record ${recordId} updated successfully`);
 
-// ✅ Show toast notification with job name or ID
-const recordRow = document.querySelector(`input[data-record-id="${recordId}"]`)?.closest("tr");
-const jobName = recordRow ? recordRow.querySelector("td:nth-child(3)")?.textContent : `Record ${recordId}`;
-showToast(`✅ Completed: ${jobName}`);
+        // ❌ removed showToast from here
+
     } catch (error) {
         console.error('❌ Error updating record:', error);
-        
-        // Rollback checkbox if Airtable update fails
         const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);
         if (checkbox) checkbox.checked = !isChecked;
     }
 }
+
 
     function updateCheckboxUI(recordId, isChecked) {
         const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);
