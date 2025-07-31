@@ -192,7 +192,6 @@ async function fetchAllIncompleteRecords() {
     }
 }
 
-
 function renderTableFromRecords() {
     const recordsContainer = document.getElementById('records');
     let filteredRecords = records;
@@ -207,7 +206,6 @@ function renderTableFromRecords() {
     }
 
     if (filteredRecords.length === 0) {
-        // Show warning if still loading
         let warning = document.getElementById('search-warning');
         if (!warning) {
             warning = document.createElement('div');
@@ -216,13 +214,9 @@ function renderTableFromRecords() {
             warning.style.margin = '1em 0';
             searchBar.parentNode.insertBefore(warning, searchBar.nextSibling);
         }
-        if (isFetching) {
-            warning.innerText = 'No matching records found so far. Still loading more—please try again shortly.';
-            warning.style.display = '';
-        } else {
-            warning.innerText = 'No matching records found so far. Still loading more—please try again shortly.';
-            warning.style.display = '';
-        }
+        warning.innerText = isFetching
+            ? 'No matching records found so far. Still loading more—please try again shortly.'
+            : 'No matching records found.';
         recordsContainer.innerHTML = '';
         return;
     } else {
@@ -230,32 +224,97 @@ function renderTableFromRecords() {
         if (warning) warning.style.display = 'none';
     }
 
-    // Build table as before, but from filteredRecords
-  // Build table as before, but from filteredRecords
-filteredRecords = sortRecordsWithSpecialCondition(filteredRecords);
-const tableHeader = `
-    <thead>
-        <tr>
-            <th style="width: 8%;">ID Number</th>
-            <th>Branch</th>
-            <th>Job Name</th>
-            <th>Description of Work</th>
-            <th>Field Technician</th>
-            <th style="width: 13%;">Completed</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-`;
-recordsContainer.innerHTML = tableHeader;
-const tableBody = recordsContainer.querySelector('tbody');
+    // ✅ Sort by Branch first if multiple branches exist, then by ID Number
+    const uniqueBranches = [...new Set(filteredRecords.map(r => r.fields['static Vanir Office']).filter(Boolean))];
+    if (uniqueBranches.length > 1) {
+        filteredRecords.sort((a, b) => {
+            const branchA = a.fields['static Vanir Office'] || '';
+            const branchB = b.fields['static Vanir Office'] || '';
+            if (branchA !== branchB) return branchA.localeCompare(branchB);
 
-// 🚀 instant row render (no fade-in)
-filteredRecords.forEach((record) => {
-    const recordRow = createRecordRow(record);
-    tableBody.appendChild(recordRow);
-});
+            // fallback: sort by ID Number if same branch
+            const idA = parseInt(a.fields['ID Number'], 10);
+            const idB = parseInt(b.fields['ID Number'], 10);
+            if (!isNaN(idA) && !isNaN(idB)) return idA - idB;
+            return (a.fields['ID Number'] || '').localeCompare(b.fields['ID Number'] || '');
+        });
+    } else {
+        filteredRecords = sortRecordsWithSpecialCondition(filteredRecords);
+    }
 
+    // ✅ Build table (Branch column always in header, but hidden later if needed)
+    const tableHeader = `
+        <thead>
+            <tr>
+                <th style="width: 8%;">ID Number</th>
+                <th class="branch-col">Branch</th>
+                <th>Job Name</th>
+                <th>Description of Work</th>
+                <th>Field Technician</th>
+                <th style="width: 13%;">Completed</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    `;
+    recordsContainer.innerHTML = tableHeader;
+    const tableBody = recordsContainer.querySelector('tbody');
+
+    filteredRecords.forEach((record) => {
+        const recordRow = createRecordRow(record);
+        tableBody.appendChild(recordRow);
+    });
+
+    // ✅ Hide Branch column completely if only one branch
+    const branchHeader = recordsContainer.querySelector('th.branch-col');
+    const branchCells = recordsContainer.querySelectorAll('td.branch-cell');
+    if (uniqueBranches.length <= 1) {
+        branchHeader.style.display = 'none';
+        branchCells.forEach(cell => (cell.style.display = 'none'));
+    } else {
+        branchHeader.style.display = '';
+        branchCells.forEach(cell => (cell.style.display = ''));
+    }
 }
+
+function createRecordRow(record) {
+    const recordRow = document.createElement('tr');
+    const IDNumber = record.fields['ID Number'] || '';
+    const vanirOffice = record.fields['static Vanir Office'] || '';
+    const jobName = record.fields['Job Name'] || '';
+    const fieldTechnician = record.fields['static Field Technician'] || '';
+    const fieldTechConfirmedComplete = record.fields['Field Tech Confirmed Job Complete'];
+    const checkboxValue = fieldTechConfirmedComplete ? 'checked' : '';
+    const descriptionOfWork = record.descriptionOfWork || '';
+
+    recordRow.innerHTML = `
+        <td>${IDNumber}</td>
+        <td class="branch-cell">${vanirOffice}</td>
+        <td>${jobName}</td>
+        <td>${descriptionOfWork}</td>
+        <td>${fieldTechnician}</td>
+        <td class="completed-cell" style="cursor: pointer;">
+            <label class="custom-checkbox" style="width:100%;height:100%;display:block;">
+                <input type="checkbox" ${checkboxValue} data-record-id="${record.id}" data-initial-checked="${checkboxValue}">
+                <span class="checkmark"></span>
+            </label>
+        </td>
+    `;
+
+    const completedTd = recordRow.querySelector('td.completed-cell');
+    const checkbox = completedTd.querySelector('input[type="checkbox"]');
+
+    completedTd.addEventListener('click', function(e) {
+        if (e.target !== checkbox) {
+            checkbox.click();
+        }
+    });
+
+    checkbox.addEventListener('click', handleCheckboxClick);
+
+    return recordRow;
+}
+
+
 
 async function fetchRecordsForTech(fieldTech) {
     showLoadingOverlay();
@@ -360,7 +419,6 @@ function createRecordRow(record) {
 
     return recordRow;
 }
-
 
     // --- Hide field tech/branch column ---
     function hideFieldTechnicianColumnIfMatches() {
