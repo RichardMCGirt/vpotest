@@ -29,10 +29,23 @@ document.addEventListener("DOMContentLoaded", async function () {
     const displayNameElement = document.getElementById('displayName');
     const techDropdown = document.getElementById('techDropdown'); 
     const searchBar = document.getElementById('searchBar'); 
+
+    // Airtable config
     const airtableApiKey = 'pata9Iv7DANqtJrgO.b308b33cd0f323601f3fb580aac0d333ca1629dd26c5ebe2e2b9f18143ccaa8e';
     const airtableBaseId = 'appQDdkj6ydqUaUkE';
     const airtableTableName = 'tblO72Aw6qplOEAhR';
-    const airtableEndpoint = `https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`;
+    const airtableViewId = 'viwAYuyLBtyoHOxPK'; // ✅ optimized view
+const airtableEndpoint = `https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}?view=${airtableViewId}`;
+ // Only fetch these fields
+    const fieldsToFetch = [
+        'ID Number',
+        'static Vanir Office',
+        'Job Name',
+        'Description of Work',
+        'static Field Technician',
+        'Field Tech Confirmed Job Complete'
+    ];
+    // Default headers for axios
     axios.defaults.headers.common['Authorization'] = `Bearer ${airtableApiKey}`;
     const cacheTime = 24 * 60 * 60 * 1000; 
     const lastFetch = localStorage.getItem('lastTechFetchTime');
@@ -51,7 +64,6 @@ searchBar.addEventListener('input', function() {
         renderTableFromRecords();
     }, 300); // wait 300ms after typing stops
 });
-
 
     // --- Dropdown population and dedupe ---
     async function fetchTechniciansWithRecords() {
@@ -116,7 +128,7 @@ async function fetchAllIncompleteRecords() {
     // Reset state before fetching
     records = [];
     fetchedRecords = 0;
-    offset = '';
+    offset = '';  // Airtable pagination offset
     totalIncompleteRecords = 0;
     isFetching = true;
 
@@ -127,10 +139,21 @@ async function fetchAllIncompleteRecords() {
         // Airtable pagination loop
         do {
             const response = await axios.get(
-                `${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`
+                `https://api.airtable.com/v0/appQDdkj6ydqUaUkE/tblO72Aw6qplOEAhR`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${airtableApiKey}`
+                    },
+                    params: {
+                        filterByFormula: `NOT({Field Tech Confirmed Job Complete})`,
+                        view: "viwAYuyLBtyoHOxPK",
+                        fields: fieldsToFetch,
+                        offset: offset // ✅ send current offset
+                    }
+                }
             );
 
-            // Keep only incomplete records and normalize structure
+            // Extract records from this page
             const pageRecords = response.data.records
                 .filter(record => !record.fields['Field Tech Confirmed Job Complete'])
                 .map(record => ({
@@ -139,24 +162,33 @@ async function fetchAllIncompleteRecords() {
                     descriptionOfWork: record.fields['Description of Work']
                 }));
 
-            // Append to global records
+            // Append new page’s records
             records = records.concat(pageRecords);
             fetchedRecords += pageRecords.length;
 
-            // Update offset for pagination
+            // ✅ Save total count as we go
+            totalIncompleteRecords = records.length;
+
+            // ✅ Update offset for next loop iteration
             offset = response.data.offset || '';
 
-            // Re-render table incrementally
+            console.log(`Fetched ${fetchedRecords} records so far. Next offset: ${offset || 'none'}`);
+
+            // Incremental table render for smoother UX
             renderTableFromRecords();
-        } while (offset); // Loop until no more pages
+
+        } while (offset); // Continue while Airtable provides an offset
+
     } catch (error) {
-        console.error('Error fetching all incomplete records:', error);
+        console.error('❌ Error fetching all incomplete records:', error);
     } finally {
         isFetching = false;
         hideLoadingOverlay();
 
-        // Final render with all records
+        // Final render after all pages loaded
         renderTableFromRecords();
+
+        console.log(`✅ Finished fetching. Total incomplete records: ${totalIncompleteRecords}`);
     }
 }
 
@@ -199,31 +231,30 @@ function renderTableFromRecords() {
     }
 
     // Build table as before, but from filteredRecords
-    filteredRecords = sortRecordsWithSpecialCondition(filteredRecords);
-    const tableHeader = `
-        <thead>
-            <tr>
-                <th style="width: 8%;">ID Number</th>
-                <th>Branch</th>
-                <th>Job Name</th>
-                <th>Description of Work</th>
-                <th>Field Technician</th>
-                <th style="width: 13%;">Completed</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    `;
-    recordsContainer.innerHTML = tableHeader;
-    const tableBody = recordsContainer.querySelector('tbody');
-    filteredRecords.forEach((record, index) => {
-        const recordRow = createRecordRow(record);
-        recordRow.style.opacity = 0;
-        setTimeout(() => {
-            recordRow.style.opacity = 1;
-            recordRow.style.transition = 'opacity 0.5s';
-        }, index * 100);
-        tableBody.appendChild(recordRow);
-    });
+  // Build table as before, but from filteredRecords
+filteredRecords = sortRecordsWithSpecialCondition(filteredRecords);
+const tableHeader = `
+    <thead>
+        <tr>
+            <th style="width: 8%;">ID Number</th>
+            <th>Branch</th>
+            <th>Job Name</th>
+            <th>Description of Work</th>
+            <th>Field Technician</th>
+            <th style="width: 13%;">Completed</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+`;
+recordsContainer.innerHTML = tableHeader;
+const tableBody = recordsContainer.querySelector('tbody');
+
+// 🚀 instant row render (no fade-in)
+filteredRecords.forEach((record) => {
+    const recordRow = createRecordRow(record);
+    tableBody.appendChild(recordRow);
+});
+
 }
 
 async function fetchRecordsForTech(fieldTech) {
@@ -232,29 +263,50 @@ async function fetchRecordsForTech(fieldTech) {
     fetchedRecords = 0;
     offset = '';
     totalIncompleteRecords = 0;
+
     try {
         const filterByFormula = `SEARCH("${fieldTech}", {static Field Technician})`;
+
         do {
-            const response = await axios.get(`${airtableEndpoint}?filterByFormula=${encodeURIComponent(filterByFormula)}&offset=${offset}`);
-            const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
+            const response = await axios.get(
+                `https://api.airtable.com/v0/appQDdkj6ydqUaUkE/tblO72Aw6qplOEAhR`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${airtableApiKey}`
+                    },
+                    params: {
+                        filterByFormula: filterByFormula,
+                        view: "viwAYuyLBtyoHOxPK", // ✅ use your custom view
+                        fields: fieldsToFetch,   // ✅ only return necessary fields
+                        offset: offset           // ✅ pagination
+                    }
+                }
+            );
+
+            const pageRecords = response.data.records
+                .filter(record => !record.fields['Field Tech Confirmed Job Complete'])
                 .map(record => ({
                     id: record.id,
                     fields: record.fields,
                     descriptionOfWork: record.fields['Description of Work']
                 }));
+
             records = records.concat(pageRecords);
             fetchedRecords += pageRecords.length;
             offset = response.data.offset || '';
         } while (offset);
+
         renderTableFromRecords()(records);
         toggleSearchBarVisibility(records.length);
         hideFieldTechnicianColumnIfMatches();
+
     } catch (error) {
         console.error(`Error fetching records for technician ${fieldTech}:`, error);
     } finally {
         hideLoadingOverlay();
     }
 }
+
 
     function sortRecordsWithSpecialCondition(records) {
         return records.sort((a, b) => {
