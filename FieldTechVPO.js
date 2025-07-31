@@ -392,13 +392,14 @@ function createRecordRow(record) {
         currentCheckbox = event.target;
         currentRecordId = currentCheckbox.getAttribute('data-record-id');
         const isChecked = currentCheckbox.checked;
-        const initialChecked = currentCheckbox.getAttribute('data-initial-checked') === 'true';
-        if (!isChecked) {
-            submitUpdate(currentRecordId, false);
-            modal.style.display = 'none';
-        } else if (!initialChecked && isChecked) {
-            modal.style.display = 'block';
-        }
+         if (!isChecked) {
+        // Unchecking: update immediately
+        submitUpdate(currentRecordId, false);
+        modal.style.display = 'none';
+    } else {
+        // Checking: always confirm
+        modal.style.display = 'block';
+    }
         currentCheckbox.setAttribute('data-initial-checked', isChecked);
     }
     yesButton.addEventListener('click', () => {
@@ -436,7 +437,6 @@ async function submitUpdate(recordId, isChecked) {
         console.log(`✅ Record ${recordId} updated successfully`);
     } catch (error) {
         console.error('❌ Error updating record:', error);
-        alert("Failed to update record. Please try again.");
         
         // Rollback checkbox if Airtable update fails
         const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);

@@ -379,3 +379,11 @@ button {
 button {
     transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
+.big-checkbox {
+  width: 60px !important;      /* base size */
+  height: 60px !important;     /* base size */
+  transform: scale(1.5);  /* ✅ makes it 1.5x bigger */
+  cursor: pointer;  /* better UX */
+  margin: 5px;
+}
+
