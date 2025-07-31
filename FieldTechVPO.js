@@ -388,38 +388,56 @@ function createRecordRow(record) {
     const yesButton = document.getElementById('yesButton');
     const noButton = document.getElementById('noButton');
 
-    function handleCheckboxClick(event) {
-        currentCheckbox = event.target;
-        currentRecordId = currentCheckbox.getAttribute('data-record-id');
-        const isChecked = currentCheckbox.checked;
-         if (!isChecked) {
-        // Unchecking: update immediately
+ function handleCheckboxClick(event) {
+    currentCheckbox = event.target;
+    currentRecordId = currentCheckbox.getAttribute('data-record-id');
+    const isChecked = currentCheckbox.checked;
+
+    if (!isChecked) {
+        // ✅ Unchecking: update immediately
         submitUpdate(currentRecordId, false);
         modal.style.display = 'none';
     } else {
-        // Checking: always confirm
+        // ✅ Checking: always confirm
         modal.style.display = 'block';
     }
-        currentCheckbox.setAttribute('data-initial-checked', isChecked);
-    }
-    yesButton.addEventListener('click', () => {
-        submitUpdate(currentRecordId, true);
-        modal.style.display = 'none';
-    });
-    noButton.addEventListener('click', () => {
-        if (currentCheckbox) currentCheckbox.checked = false;
-        modal.style.display = 'none';
-    });
+
+    // Keep the attribute updated for consistency
+    currentCheckbox.setAttribute('data-initial-checked', isChecked);
+}
+
+// ✅ Yes button → confirm and update Airtable
+yesButton.addEventListener('click', () => {
+    console.log("✅ Yes clicked, updating record:", currentRecordId);
+    submitUpdate(currentRecordId, true);
+    modal.style.display = 'none';
+});
+
+
+// ✅ No button → cancel check and revert UI
+noButton.addEventListener('click', () => {
+    if (currentCheckbox) currentCheckbox.checked = false;
+    modal.style.display = 'none';
+});
+
 
 async function submitUpdate(recordId, isChecked) {
     try {
         // Patch Airtable record
-        await axios.patch(`${airtableEndpoint}/${recordId}`, {
-            fields: {
-                'Field Tech Confirmed Job Complete': isChecked,
-                'Field Tech Confirmed Job Completed Date': isChecked ? new Date().toISOString() : null
+        await axios.patch(
+            `https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${recordId}`,
+            {
+                fields: {
+                    "Field Tech Confirmed Job Complete": isChecked
+                }
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${airtableApiKey}`,
+                    "Content-Type": "application/json"
+                }
             }
-        });
+        );
 
         // Update checkbox UI
         updateCheckboxUI(recordId, isChecked);
@@ -430,7 +448,7 @@ async function submitUpdate(recordId, isChecked) {
             if (row) {
                 row.style.transition = "opacity 0.4s";
                 row.style.opacity = "0";
-                setTimeout(() => row.remove(), 400); // remove row after fade-out
+                setTimeout(() => row.remove(), 400); 
             }
         }
 
@@ -443,6 +461,7 @@ async function submitUpdate(recordId, isChecked) {
         if (checkbox) checkbox.checked = !isChecked;
     }
 }
+
 
     function updateCheckboxUI(recordId, isChecked) {
         const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);
