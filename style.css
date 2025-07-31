@@ -387,3 +387,26 @@ button {
   margin: 5px;
 }
 
+.toast {
+  visibility: hidden;
+  min-width: 250px;
+  margin-left: -125px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 14px;
+  position: fixed;
+  left: 50%;
+  top: 20%;
+  z-index: 9999;
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.4s, top 0.4s;
+}
+
+.toast.show {
+  visibility: visible;
+  opacity: 1;
+  top: 30%;
+}

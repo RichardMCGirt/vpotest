@@ -420,7 +420,6 @@ noButton.addEventListener('click', () => {
     modal.style.display = 'none';
 });
 
-
 async function submitUpdate(recordId, isChecked) {
     try {
         // Patch Airtable record
@@ -452,7 +451,12 @@ async function submitUpdate(recordId, isChecked) {
             }
         }
 
-        console.log(`✅ Record ${recordId} updated successfully`);
+console.log(`✅ Record ${recordId} updated successfully`);
+
+// ✅ Show toast notification with job name or ID
+const recordRow = document.querySelector(`input[data-record-id="${recordId}"]`)?.closest("tr");
+const jobName = recordRow ? recordRow.querySelector("td:nth-child(3)")?.textContent : `Record ${recordId}`;
+showToast(`✅ Completed: ${jobName}`);
     } catch (error) {
         console.error('❌ Error updating record:', error);
         
@@ -461,7 +465,6 @@ async function submitUpdate(recordId, isChecked) {
         if (checkbox) checkbox.checked = !isChecked;
     }
 }
-
 
     function updateCheckboxUI(recordId, isChecked) {
         const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);
@@ -499,3 +502,13 @@ async function submitUpdate(recordId, isChecked) {
     }
     hideFieldTechnicianColumnIfMatches();
 });
+
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.className = "toast show";
+
+    setTimeout(() => {
+        toast.className = "toast"; // hide again after 3 seconds
+    }, 3000);
+}
