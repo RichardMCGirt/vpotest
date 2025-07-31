@@ -321,13 +321,16 @@ async function fetchRecordsForTech(fieldTech) {
 
 function createRecordRow(record) {
     const recordRow = document.createElement('tr');
+
+    // Safely extract fields
     const IDNumber = record.fields['ID Number'] || '';
     const vanirOffice = record.fields['static Vanir Office'] || '';
     const jobName = record.fields['Job Name'] || '';
+    const descriptionOfWork = record.fields['Description of Work'] || '';
     const fieldTechnician = record.fields['static Field Technician'] || '';
     const fieldTechConfirmedComplete = record.fields['Field Tech Confirmed Job Complete'];
+
     const checkboxValue = fieldTechConfirmedComplete ? 'checked' : '';
-    const descriptionOfWork = record.descriptionOfWork || '';
 
     recordRow.innerHTML = `
         <td>${IDNumber}</td>
@@ -337,18 +340,35 @@ function createRecordRow(record) {
         <td>${fieldTechnician}</td>
         <td class="completed-cell">
             <label class="custom-checkbox">
-                <input type="checkbox" ${checkboxValue} data-record-id="${record.id}" data-initial-checked="${checkboxValue}">
+                <input 
+                    type="checkbox" 
+                    ${checkboxValue} 
+                    data-record-id="${record.id}" 
+                    data-initial-checked="${checkboxValue}">
                 <span class="checkmark"></span>
             </label>
         </td>
     `;
 
-    // Only attach directly to the checkbox
-    const checkbox = recordRow.querySelector('input[type="checkbox"]');
+    // Grab references
+    const completedCell = recordRow.querySelector('.completed-cell');
+    const checkbox = completedCell.querySelector('input[type="checkbox"]');
+
+    // Normal checkbox click handler
     checkbox.addEventListener('click', handleCheckboxClick);
+
+    // ✅ Make clicking the entire cell toggle the checkbox
+    completedCell.addEventListener('click', (e) => {
+        // Prevent double-trigger if the click was directly on the checkbox
+        if (e.target.tagName.toLowerCase() !== 'input') {
+            checkbox.click();
+        }
+    });
 
     return recordRow;
 }
+
+
 
 
     // --- Hide field tech/branch column ---
