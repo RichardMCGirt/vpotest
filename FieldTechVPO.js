@@ -308,16 +308,26 @@ async function fetchRecordsForTech(fieldTech) {
 }
 
 
-    function sortRecordsWithSpecialCondition(records) {
-        return records.sort((a, b) => {
-            const idA = a.fields['ID Number'] || '';
-            const idB = b.fields['ID Number'] || '';
-            const numA = parseInt(idA, 10);
-            const numB = parseInt(idB, 10);
-            if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-            return idA.localeCompare(idB);
-        });
-    }
+ function sortRecordsWithSpecialCondition(records) {
+    return records.sort((a, b) => {
+        const branchA = a.fields['static Vanir Office'] || '';
+        const branchB = b.fields['static Vanir Office'] || '';
+
+        // ✅ First sort by branch alphabetically
+        const branchCompare = branchA.localeCompare(branchB);
+        if (branchCompare !== 0) return branchCompare;
+
+        // ✅ Then sort by numeric ID inside each branch
+        const idA = a.fields['ID Number'] || '';
+        const idB = b.fields['ID Number'] || '';
+        const numA = parseInt(idA, 10);
+        const numB = parseInt(idB, 10);
+
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return idA.localeCompare(idB);
+    });
+}
+
 
 function createRecordRow(record) {
     const recordRow = document.createElement('tr');
