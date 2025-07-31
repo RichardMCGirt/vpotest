@@ -43,11 +43,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     // --- Search bar filtering ---
-   searchBar.addEventListener('input', function() {
-    currentSearchTerm = searchBar.value.toLowerCase();
-    renderTableFromRecords();
+  let searchTimeout;
+searchBar.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentSearchTerm = searchBar.value.toLowerCase();
+        renderTableFromRecords();
+    }, 300); // wait 300ms after typing stops
 });
-
 
 
     // --- Dropdown population and dedupe ---
@@ -106,37 +109,57 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // --- Fetch records ---
+// --- Fetch all incomplete records from Airtable ---
 async function fetchAllIncompleteRecords() {
-    showLoadingOverlay();
+    showLoadingOverlay(); // Show spinner/overlay while loading
+
+    // Reset state before fetching
     records = [];
     fetchedRecords = 0;
     offset = '';
     totalIncompleteRecords = 0;
     isFetching = true;
-    renderTableFromRecords(); // Initial empty
+
+    // Render empty state while loading
+    renderTableFromRecords();
+
     try {
+        // Airtable pagination loop
         do {
-            const response = await axios.get(`${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`);
-            const pageRecords = response.data.records.filter(record => !record.fields['Field Tech Confirmed Job Complete'])
+            const response = await axios.get(
+                `${airtableEndpoint}?filterByFormula=NOT({Field Tech Confirmed Job Complete})&offset=${offset}`
+            );
+
+            // Keep only incomplete records and normalize structure
+            const pageRecords = response.data.records
+                .filter(record => !record.fields['Field Tech Confirmed Job Complete'])
                 .map(record => ({
                     id: record.id,
                     fields: record.fields,
                     descriptionOfWork: record.fields['Description of Work']
                 }));
+
+            // Append to global records
             records = records.concat(pageRecords);
             fetchedRecords += pageRecords.length;
+
+            // Update offset for pagination
             offset = response.data.offset || '';
-            renderTableFromRecords(); // Update table after each page
-        } while (offset);
+
+            // Re-render table incrementally
+            renderTableFromRecords();
+        } while (offset); // Loop until no more pages
     } catch (error) {
         console.error('Error fetching all incomplete records:', error);
     } finally {
         isFetching = false;
         hideLoadingOverlay();
-        renderTableFromRecords(); // Final update to show all fetched
+
+        // Final render with all records
+        renderTableFromRecords();
     }
 }
+
 
 function renderTableFromRecords() {
     const recordsContainer = document.getElementById('records');
@@ -335,20 +358,40 @@ function createRecordRow(record) {
         modal.style.display = 'none';
     });
 
-    async function submitUpdate(recordId, isChecked) {
-        try {
-            await axios.patch(`${airtableEndpoint}/${recordId}`, {
-                fields: {
-                    'Field Tech Confirmed Job Complete': isChecked,
-                    'Field Tech Confirmed Job Completed Date': isChecked ? new Date().toISOString() : null
-                }
-            });
-            updateCheckboxUI(recordId, isChecked);
-            location.reload(); // Optional: refresh page after
-        } catch (error) {
-            console.error('Error updating record:', error);
+async function submitUpdate(recordId, isChecked) {
+    try {
+        // Patch Airtable record
+        await axios.patch(`${airtableEndpoint}/${recordId}`, {
+            fields: {
+                'Field Tech Confirmed Job Complete': isChecked,
+                'Field Tech Confirmed Job Completed Date': isChecked ? new Date().toISOString() : null
+            }
+        });
+
+        // Update checkbox UI
+        updateCheckboxUI(recordId, isChecked);
+
+        // Optionally, remove the row from the table if it's completed
+        if (isChecked) {
+            const row = document.querySelector(`input[data-record-id="${recordId}"]`)?.closest("tr");
+            if (row) {
+                row.style.transition = "opacity 0.4s";
+                row.style.opacity = "0";
+                setTimeout(() => row.remove(), 400); // remove row after fade-out
+            }
         }
+
+        console.log(`✅ Record ${recordId} updated successfully`);
+    } catch (error) {
+        console.error('❌ Error updating record:', error);
+        alert("Failed to update record. Please try again.");
+        
+        // Rollback checkbox if Airtable update fails
+        const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);
+        if (checkbox) checkbox.checked = !isChecked;
     }
+}
+
     function updateCheckboxUI(recordId, isChecked) {
         const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);
         if (checkbox) {
@@ -373,6 +416,7 @@ function createRecordRow(record) {
         }
         hideFieldTechnicianColumnIfMatches();
     });
+    showLoadingOverlay();
 
     // --- Page load: only fetch once! ---
     await populateDropdown();

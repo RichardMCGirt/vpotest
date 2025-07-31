@@ -4,23 +4,23 @@ body {
     background-color: #d0d2d6;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center contents horizontally */
+    align-items: center; 
 
-    height: 100vh; /* Full viewport height */
+    height: 100vh; 
     margin: 0;
     color: #333;
-    overflow: hidden; /* Prevent unnecessary scrolling */
+    overflow: hidden; 
 }
 
 /* Hide scrollbar for all browsers */
 .table-container, .table-wrapper {
-    overflow: auto; /* Ensure content can still scroll */
+    overflow: auto; 
 }
 
 /* Hide scrollbar for Internet Explorer, Edge, and Firefox */
 .table-container, .table-wrapper {
-    -ms-overflow-style: none;  /* Internet Explorer and Edge */
-    scrollbar-width: none;     /* Firefox */
+    -ms-overflow-style: none;  
+    scrollbar-width: none;     
 }
 
 .underline {
@@ -29,18 +29,17 @@ body {
 
 /* Table container for responsiveness */
 .table-container {
-    width: 100%;                 /* Full width of parent */
-    max-width: 95vw;             /* Responsive max width */
-    max-height: 90vh;            /* Max height for table area */
-    overflow-x: auto;            /* Horizontal scroll for table */
-    overflow-y: auto;            /* Vertical scroll for table */
-    margin: 5px auto;            /* Top & bottom 5px, left/right auto (centers horizontally) */
+    width: 100%;                
+    max-width: 95vw;            
+    max-height: 90vh;           
+    overflow-x: auto;         
+    overflow-y: auto;           
+    margin: 5px auto;           
     padding: 10px;
     border-radius: 8px;
     box-sizing: border-box;
     position: relative;
 }
-
 
 /* Wrapper around the table */
 .table-wrapper {
@@ -48,16 +47,16 @@ body {
     height: 100%;
     overflow-x: auto;
     overflow-y: auto;
-    padding: 0; /* No padding on the table itself */
-        text-align: center;      /* Center content inside wrapper */
+    padding: 0; 
+        text-align: center;     
 }
 
 /* Table styling */
 table {
-        display: inline-table;   /* Allows centering via text-align */
+        display: inline-table;   
     margin: 0 auto;
 
-    min-width: 600px; /* Prevent table from collapsing on small screens */
+    min-width: 600px; 
     border: 2px solid #24346c;
 }
 
@@ -84,25 +83,22 @@ th {
 }
 
 tr:nth-child(even) {
-    background-color: #ffffff; /* Pure white */
+    background-color: #ffffff; 
 }
 
 tr:nth-child(odd) {
-    background-color: #f7f7f7; /* Very light off-white */
+    background-color: #f7f7f7; 
 }
-
-
-/* Responsive design for portrait and landscape modes */
 
 /* Portrait mode */
 @media screen and (orientation: portrait) {
     .table-container {
-        max-height: 0vh; /* Use more vertical space */
-        margin-bottom: 10px; /* Extra bottom margin */
+        max-height: 0vh; 
+        margin-bottom: 10px; 
     }
 
     table {
-        font-size: 14px; /* Slightly smaller font for portrait view */
+        font-size: 14px; 
     }
     
     th, td {
@@ -114,34 +110,30 @@ tr:nth-child(odd) {
 /* Landscape mode */
 @media screen and (orientation: landscape) {
     .table-container {
-        margin-bottom: 30px; /* Ensure margin at the bottom */
+        margin-bottom: 30px; 
     }
 
     table {
-        font-size: 16px; /* Larger font in landscape view */
+        font-size: 16px; 
     }
 
     th, td {
         padding: 10px;
         max-width: 200px;
     }
-
-
-    
-    
 }
 
 /* Responsive design for different screen sizes */
 @media (max-width: 768px) {
     .table-container {
-        width: 100%; /* Full width on smaller screens */
-        max-width: 100vw; /* Ensure it doesn’t overflow the viewport */
+        width: 100%; 
+        max-width: 100vw; 
         padding: 5px;
     }
 
     table {
         font-size: 12px;
-        min-width: 100%; /* Ensure table is responsive */
+        min-width: 100%; 
     }
     
     th, td {
@@ -165,7 +157,7 @@ tr:nth-child(odd) {
         width: 95%;
         padding: 5px;
         margin-top: 10px;
-        max-height: 45vh; /* Ensure it uses most of the available height */
+        max-height: 45vh; 
     }
 }
 
@@ -228,7 +220,6 @@ tr:nth-child(odd) {
   cursor: pointer;
 }
 
-
 #loadingOverlay {
   display: none;
   position: fixed;
@@ -240,7 +231,7 @@ tr:nth-child(odd) {
 }
 .loading-spinner {
   border: 8px solid #f3f3f3;
-  border-top: 8px solid #003366; /* Vanir blue or use your brand color */
+  border-top: 8px solid #003366; 
   border-radius: 50%;
   width: 64px;
   height: 64px;
@@ -249,7 +240,6 @@ tr:nth-child(odd) {
 @keyframes spin {
   100% { transform: rotate(360deg);}
 }
-
 
 /* Spinner styling */
 .spinner {
@@ -265,7 +255,6 @@ tr:nth-child(odd) {
     transform: translate(-50%, -50%);
     z-index: 9999;
 }
-
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
@@ -308,13 +297,13 @@ button {
         background-color: #d0d2d6;
         display: flex;
         flex-direction: column;
-        justify-content: center; /* Center contents vertically */
-        align-items: center; /* Center contents horizontally */
-        height: 100vh; /* Full viewport height */
+        justify-content: center; 
+        align-items: center; 
+        height: 100vh; 
         font-size: small;
         margin: 0;
         color: #333;
-        overflow: hidden; /* Prevent unnecessary scrolling */
+        overflow: hidden; 
     }
 
     .custom-checkbox {
@@ -330,24 +319,24 @@ button {
     th, td {
     padding: 6px 10px;
     text-align: center;
-    white-space: normal;    /* Allow text to wrap in cells */
+    white-space: normal;   
 }
 
     .table-container {
-        width: 100%; /* Full width */
-        max-width: 98vw; /* Responsive width for large screens */
-        max-height: 99vh; /* Max height of 80% viewport */
+        width: 100%; 
+        max-width: 98vw;
+        max-height: 99vh; 
         height: 100%;
-        padding: 0px; /* Add padding to the container */
+        padding: 0px; 
         border-radius: 4px;
-        box-sizing: border-box; /* Include padding in width/height */
+        box-sizing: border-box; 
         position: relative;
-        overflow-x: none; /* Prevent horizontal scroll on body */
+        overflow-x: none; 
     }
 
     table {
-        width: 98%; /* Full width */
-        min-width: 95%; /* Prevent table from collapsing on small screens */
+        width: 98%; 
+        min-width: 95%; 
         border: 2px solid #24346c;
         max-height: 100%;
     }
@@ -357,10 +346,8 @@ button {
         height: 100%;
         overflow-x: auto;
         overflow-y: auto;
-        padding: 0; /* No padding on the table itself */
+        padding: 0; 
     }
-
-  
 }
 
 /* Custom checkbox responsiveness */
@@ -374,8 +361,6 @@ button {
         width: 25px;
         height: 25px;
     }
-
-  
 }
 
 @media (max-width: 480px) {
