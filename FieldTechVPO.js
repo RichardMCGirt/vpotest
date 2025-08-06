@@ -66,28 +66,53 @@ searchBar.addEventListener('input', function() {
 });
 
     // --- Dropdown population and dedupe ---
-    async function fetchTechniciansWithRecords() {
-        offset = '';
-        techniciansWithRecords = new Set();
-        try {
-            do {
-                const response = await axios.get(`${airtableEndpoint}?offset=${offset}`);
-                const pageRecords = response.data.records;
-                pageRecords.forEach(record => {
-                    const techName = record.fields['static Field Technician'];
-                    const isJobComplete = record.fields['Field Tech Confirmed Job Complete'];
-                    if (techName && !isJobComplete) {
-                        techniciansWithRecords.add(techName);
-                    }
-                });
-                offset = response.data.offset || '';
-            } while (offset);
-            return Array.from(techniciansWithRecords).sort();
-        } catch (error) {
-            console.error('Error fetching technicians:', error);
-            return [];
-        }
+async function fetchTechniciansWithRecords() {
+    offset = '';
+    techniciansWithRecords = new Set();
+
+    try {
+        do {
+            // ✅ explicitly request the needed fields
+            const response = await axios.get(`${airtableEndpoint}`, {
+                params: {
+                    offset: offset,
+                    fields: ['static Field Technician', 'Field Tech Confirmed Job Complete']
+                }
+            });
+
+            const pageRecords = response.data.records;
+            console.log("🔎 Page records count:", pageRecords.length);
+
+            pageRecords.forEach(record => {
+                const techName = record.fields['static Field Technician'];
+                const isJobComplete = record.fields['Field Tech Confirmed Job Complete'];
+                console.log("➡️ Tech:", techName, "| Complete?", isJobComplete);
+
+                // ✅ Option 1: only include if job NOT complete
+                if (techName && !isJobComplete) {
+                    techniciansWithRecords.add(techName);
+                }
+
+                // ✅ Option 2 (alternative): include all techs regardless of completion
+                // if (techName) {
+                //     techniciansWithRecords.add(techName);
+                // }
+            });
+
+            offset = response.data.offset || '';
+        } while (offset);
+
+        const result = Array.from(techniciansWithRecords).sort();
+        console.log("✅ Technicians found:", result);
+        return result;
+
+    } catch (error) {
+        console.error('❌ Error fetching technicians:', error);
+        return [];
     }
+}
+
+
 
     function populateDropdownFromCache(technicians) {
         const uniqueTechs = Array.from(new Set(technicians.filter(Boolean)));
@@ -123,37 +148,30 @@ searchBar.addEventListener('input', function() {
 
 // --- Fetch all incomplete records from Airtable ---
 async function fetchAllIncompleteRecords() {
-    showLoadingOverlay(); // Show spinner/overlay while loading
-
-    // Reset state before fetching
+    showLoadingOverlay();
     records = [];
     fetchedRecords = 0;
-    offset = '';  // Airtable pagination offset
+    offset = '';
     totalIncompleteRecords = 0;
     isFetching = true;
 
-    // Render empty state while loading
     renderTableFromRecords();
 
     try {
-        // Airtable pagination loop
         do {
             const response = await axios.get(
-                `https://api.airtable.com/v0/appQDdkj6ydqUaUkE/tblO72Aw6qplOEAhR`,
+                `https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`,
                 {
-                    headers: {
-                        Authorization: `Bearer ${airtableApiKey}`
-                    },
+                    headers: { Authorization: `Bearer ${airtableApiKey}` },
                     params: {
                         filterByFormula: `NOT({Field Tech Confirmed Job Complete})`,
-                        view: "viwAYuyLBtyoHOxPK",
+                        view: airtableViewId,
                         fields: fieldsToFetch,
-                        offset: offset // ✅ send current offset
+                        offset: offset
                     }
                 }
             );
 
-            // Extract records from this page
             const pageRecords = response.data.records
                 .filter(record => !record.fields['Field Tech Confirmed Job Complete'])
                 .map(record => ({
@@ -162,35 +180,29 @@ async function fetchAllIncompleteRecords() {
                     descriptionOfWork: record.fields['Description of Work']
                 }));
 
-            // Append new page’s records
             records = records.concat(pageRecords);
             fetchedRecords += pageRecords.length;
-
-            // ✅ Save total count as we go
             totalIncompleteRecords = records.length;
-
-            // ✅ Update offset for next loop iteration
             offset = response.data.offset || '';
 
-            console.log(`Fetched ${fetchedRecords} records so far. Next offset: ${offset || 'none'}`);
-
-            // Incremental table render for smoother UX
             renderTableFromRecords();
 
-        } while (offset); // Continue while Airtable provides an offset
+        } while (offset);
 
     } catch (error) {
         console.error('❌ Error fetching all incomplete records:', error);
     } finally {
         isFetching = false;
         hideLoadingOverlay();
-
-        // Final render after all pages loaded
         renderTableFromRecords();
+
+        // ✅ Make sure search bar visibility updates here too
+        toggleSearchBarVisibility(records.length);
 
         console.log(`✅ Finished fetching. Total incomplete records: ${totalIncompleteRecords}`);
     }
 }
+
 
 
 function renderTableFromRecords() {
@@ -230,7 +242,6 @@ function renderTableFromRecords() {
         if (warning) warning.style.display = 'none';
     }
 
-    // Build table as before, but from filteredRecords
   // Build table as before, but from filteredRecords
 filteredRecords = sortRecordsWithSpecialCondition(filteredRecords);
 const tableHeader = `
@@ -296,7 +307,8 @@ async function fetchRecordsForTech(fieldTech) {
             offset = response.data.offset || '';
         } while (offset);
 
-        renderTableFromRecords()(records);
+        // ✅ just call it once
+        renderTableFromRecords(); 
         toggleSearchBarVisibility(records.length);
         hideFieldTechnicianColumnIfMatches();
 
@@ -327,7 +339,6 @@ async function fetchRecordsForTech(fieldTech) {
         return idA.localeCompare(idB);
     });
 }
-
 
 function createRecordRow(record) {
     const recordRow = document.createElement('tr');
@@ -374,7 +385,6 @@ function createRecordRow(record) {
             checkbox.click();
         }
     });
-
     return recordRow;
 }
 
@@ -435,8 +445,6 @@ yesButton.addEventListener('click', () => {
     modal.style.display = 'none';
 });
 
-
-
 // ✅ No button → cancel check and revert UI
 noButton.addEventListener('click', () => {
     if (currentCheckbox) currentCheckbox.checked = false;
@@ -473,15 +481,12 @@ async function submitUpdate(recordId, isChecked) {
 
         console.log(`✅ Record ${recordId} updated successfully`);
 
-        // ❌ removed showToast from here
-
     } catch (error) {
         console.error('❌ Error updating record:', error);
         const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);
         if (checkbox) checkbox.checked = !isChecked;
     }
 }
-
 
     function updateCheckboxUI(recordId, isChecked) {
         const checkbox = document.querySelector(`input[data-record-id="${recordId}"]`);
