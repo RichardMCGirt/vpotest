@@ -1,49 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>VPO Awaiting Field Tech</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="favicon3.ico">
-
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+  />
+  <title>VPO Awaiting Field Tech</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="favicon3.ico" />
 </head>
 <body>
-<br> 
-<h1>Open VPOs</h1>
-<input type="text" id="searchBar" class="search-bar" placeholder="Search jobs..." />
+  <br />
+  <h1>Open VPOs</h1>
 
+  <!-- Filters -->
+  <div class="filters" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+    <input
+      type="text"
+      id="searchBar"
+      class="search-bar"
+      placeholder="Search jobs..."
+      aria-label="Search jobs"
+    />
+    <button id="searchButton" style="display:none; margin-top:10px;">Search</button>
 
-<button id="searchButton" style="display: none; margin-top: 10px;">Search</button>
-    </div>
-    <p id="displayName" style="display: none;"></p>
-    <select id="techDropdown">
-        <option value="all">Display All</option>
+    <!-- Optional display of who is selected/logged in -->
+    <p id="displayName" style="display:none; margin:0;"></p>
+
+    <!-- Technician dropdown (persists to localStorage as 'fieldTech') -->
+    <label for="techDropdown" style="font-weight:600;">Technician:</label>
+    <select id="techDropdown" aria-label="Filter by Technician">
+      <option value="all">Display All</option>
     </select>
-    
-    <div class="table-container">
-        <div class="table-wrapper">
-            <table id="records">
-                <tbody>
-                    <!-- Table rows will be inserted here -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div id="loadingOverlay">
-  <div class="loading-spinner"></div>
-</div>
-<div id="toast" class="toast"></div>
 
-    <div class="modal-overlay" id="modalOverlay"></div>
+    <!-- Branch dropdown (NEW) (persists to localStorage as 'branchFilter') -->
+    <label for="branchDropdown" style="font-weight:600;">Branch:</label>
+    <select id="branchDropdown" aria-label="Filter by Branch">
+      <option value="all">All Branches</option>
+    </select>
+  </div>
 
-    <div id="modal">
-        <p>Are you sure you want to confirm the job is complete?</p>
-        <button id="yesButton">Yes</button>
-        <button id="noButton">No</button>
+  <!-- Table -->
+  <div class="table-container">
+    <div class="table-wrapper">
+      <table id="records">
+        <tbody>
+          <!-- Table rows will be inserted here by FieldTechVPO.js -->
+        </tbody>
+      </table>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="FieldTechVPO.js"></script>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" style="display:none;">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay"></div>
+  <div id="modal" style="display:none;">
+    <p>Are you sure you want to confirm the job is complete?</p>
+    <button id="yesButton">Yes</button>
+    <button id="noButton">No</button>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="FieldTechVPO.js"></script>
 </body>
 </html>
