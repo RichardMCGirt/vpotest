@@ -11,6 +11,12 @@
   --border:#e5e7eb;
   --shadow:0 8px 24px rgba(0,0,0,.08);
   --radius:14px;
+  --table-bg:#ffffff;     /* table surface (distinct from page) */
+  --row-odd:#ffffff;      /* odd rows */
+  --row-even:#7275798a;     /* even rows */
+  --row-hover:#c7d2df;    /* hover */
+  --row-even-ink:#111827; /* near-black text for contrast */
+
 }
 
 *{ box-sizing:border-box; }
@@ -112,6 +118,7 @@ h1{
   overflow-x: auto;           /* keep this everywhere */
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  background: var(--table-bg); 
 }
 
 
@@ -158,9 +165,11 @@ h1{
     max-height: none;
   }
 
-table{ width:100%; border-collapse:separate; border-spacing:0; }
+table{ width:100%; border-collapse:separate; border-spacing:0; 
+background: var(--table-bg);}
 thead th{
   position: sticky; top: 0; background: var(--bg); z-index: 2;
+   background: var(--table-bg);
   text-align:left; font-weight:700; font-size:14px; padding:10px 12px; border-bottom:1px solid var(--border);
 
   /* keep headers readable — wrap only at spaces */
@@ -169,21 +178,22 @@ thead th{
 tbody td{
   font-size:14px; padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top;
 }
-tbody tr:nth-child(odd){ background:#fcfcfd; }
+tbody tr:nth-child(odd){ background: var(--row-odd); }
 tbody tr:hover{ background:#f6fbff; }
 td.completed-cell{ text-align:center; }
 
 /* Description/Job wrap vertically to avoid horizontal scroll */
 #records td.col-job, #records td.col-desc{
-  white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height:1.35;
+  white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height:1.35; 
 }
-
+tbody tr:nth-child(even){ background: var(--row-even); }
+tbody tr:hover{           background: var(--row-hover); }
 /* Completed and ID stay compact */
 #records th.col-completed, #records td.col-completed{
-  width:1%; white-space:nowrap; text-align:center; padding-left:8px; padding-right:8px;
+  width:1%; white-space:nowrap; text-align:center; padding-left:8px; padding-right:8px; background: var(--table-bg);
 }
 #records td.col-completed .custom-checkbox{ margin-inline:auto; }
-#records th.col-id, #records td.col-id{ width:1%; white-space:nowrap; }
+#records th.col-id, #records td.col-id{ width:1%; white-space:nowrap;  background: var(--table-bg);}
 
 /* Reasonable minimums so cells don’t collapse to tiny widths */
 #records th, #records td{ min-width:40px; }
@@ -308,3 +318,92 @@ label.custom-checkbox{
   border-color: var(--ok);
   background:#e8f9ee;
 }
+/* Make the table surface distinct from the page */
+.table-wrapper, table, thead th { background: var(--table-bg); }
+
+/* Zebra rows */
+tbody tr:nth-child(odd){  background: var(--row-odd); }
+:root{
+  --row-even:#e5e7eb;   /* light gray even row */
+  --row-even-ink:#111827; /* near-black text for contrast */
+}
+
+tbody tr:nth-child(even){
+  background: var(--row-even);
+  color: var(--row-even-ink);
+}
+
+tbody tr:hover{           background: var(--row-hover); }
+
+/* ✅ Sticky header cells use table surface (not body) */
+#records thead th,
+#records th.col-id,
+#records th.col-completed{
+  background: var(--table-bg) !important;
+}
+
+/* ✅ Sticky TD cells inherit their row stripe color */
+#records td.col-id,
+#records td.col-completed{
+  background: inherit !important;
+}
+#records td.col-id,
+#records td.col-completed{
+  background: inherit !important;
+  color: inherit !important;
+}
+/* Base: use a variable for the checkbox border */
+.custom-checkbox .checkmark{
+  border: 2px solid var(--cb-border, var(--border)); margin-inline:auto; 
+}
+
+/* Checked still uses the same variable unless you override it */
+.custom-checkbox input:checked + .checkmark{
+  border-color: var(--cb-border, var(--border));
+  background: #e8f9ee;
+}
+
+/* Even rows: set the variable to white */
+tbody tr:nth-child(even){
+  --cb-border: grey;
+}
+
+ /* Layout & accessibility niceties */
+    .table-container {
+      padding: 1rem;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      outline: none; /* we’ll show a focus ring only when keyboard focusing */
+    }
+    .table-wrapper:focus-visible {
+      outline: 2px solid #3b82f6; /* accessible focus ring */
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+
+    /* Table base */
+    #records {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto;
+    }
+
+    /* Center everything in cells */
+    #records th,
+    #records td {
+      text-align: center;     /* horizontal centering */
+      vertical-align: middle; /* vertical centering */
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;    /* optional: keep single-line cells tidy */
+    }
+
+    /* Checkboxes: ensure perfect centering within the cell */
+   
+
+    /* Optional: nicer header look */
+    #records thead th {
+      font-weight: 600;
+      background: #f9fafb;
+    }

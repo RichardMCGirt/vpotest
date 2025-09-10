@@ -456,9 +456,6 @@ function buildTableHeader() {
   return tbody;
 }
 
-
-
-
 function renderTableFromRecords(fullReset = false) {
   const recordsContainer = document.getElementById('records');
   if (!recordsContainer) return;
@@ -536,7 +533,6 @@ function renderTableFromRecords(fullReset = false) {
   // Ensure column visibility stays correct for newly appended rows
   hideColumnsIfFiltered();
 }
-
 
 // ==============================
 //  Row + Checkbox / Modal
