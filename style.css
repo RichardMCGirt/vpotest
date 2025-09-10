@@ -370,7 +370,8 @@ tbody tr:nth-child(even){
 
  /* Layout & accessibility niceties */
     .table-container {
-      padding: 1rem;
+                  border: 2px solid #000; /* black border around the table */
+
     }
     .table-wrapper {
       overflow-x: auto;
@@ -387,6 +388,7 @@ tbody tr:nth-child(even){
       width: 100%;
       border-collapse: collapse;
       table-layout: auto;
+
     }
 
     /* Center everything in cells */
