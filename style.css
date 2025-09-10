@@ -171,12 +171,12 @@ td.completed-cell{ text-align:center; }
 #records th, #records td{ min-width:40px; }
 
 /* Optional col width hints (desktop-biased) */
-#records .w-id        { width: 14%; }
+#records .w-id        { width: 7%; }
 #records .w-branch    { width: 18%; }
 #records .w-job       { width: 26%; }
 #records .w-desc      { width: 30%; }
 #records .w-tech      { width: 18%; }
-#records .w-completed { width: 12ch; }
+#records .w-completed { width: 6%; }
 
 /* Mobile column sizing strategy
    - If BOTH Branch and Tech are visible, let browser auto-size (prevents “tall letters” headers)
@@ -189,6 +189,7 @@ td.completed-cell{ text-align:center; }
   #records thead th, #records tbody td{ padding:10px 8px; font-size:13px; }
   /* neutralize any min-width constraints on mobile */
   #records thead th{ min-width:auto !important; }
+  
 }
 
 /* Checkbox styling */
