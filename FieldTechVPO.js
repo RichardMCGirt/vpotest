@@ -211,7 +211,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   if (displayNameElement) {
     displayNameElement.innerText =
-      storedTech !== "all" && storedTech ? `Logged in as: ${storedTech}` : '';
+      storedTech !== "all" && storedTech ? ` ` : '';
   }
 
   // Initial fetch & render
@@ -225,7 +225,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
       if (displayNameElement) {
         displayNameElement.innerText =
-          selectedTech !== "all" && selectedTech ? `Logged in as: ${selectedTech}` : '';
+          selectedTech !== "all" && selectedTech ? `` : '';
       }
 
       const selectedBranch = (branchDropdown && branchDropdown.value) || 'all';
